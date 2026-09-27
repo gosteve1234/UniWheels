@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniWheels - High-Performance Vehicles & Custom Wheels</title>
+  <meta name="description" content="UniWheels - Premier automotive customization, forged wheels, and high-performance vehicle acquisitions.">
+  
+  <!-- Google Fonts: Inter and Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+</head>
+<body>
+
+  <!-- Sleek Luxury Navbar -->
+  <header class="site-header">
+    <div class="container">
+      <div class="nav-wrapper">
+        
+        <!-- Official Brand Logo -->
+        <a href="#showcase" class="brand-link" title="UniWheels">
+          <img src="assets/images/logo.png" alt="UniWheels Official Logo" class="brand-emblem">
+          <div class="brand-title-group">
+            <div class="brand-logo-text">
+              <span class="brand-uni">UNI</span><span class="brand-wheels">WHEELS</span>
+            </div>
+            <span class="brand-subtitle">FORGED & PERFORMANCE</span>
+          </div>
+        </a>
+
+        <!-- Luxury Dealership Navigation Links -->
+        <nav class="site-nav" aria-label="Main Navigation">
+          <a href="#showcase" class="nav-link active">Vehicles</a>
+          <a href="#showcase" class="nav-link">Showroom Fleet</a>
+          <a href="#inquirySection" class="nav-link">Inquire Us</a>
+          <a href="#about" class="nav-link">About</a>
+        </nav>
+
+        <!-- Sleek Dealership Action CTAs (Inquire + Circular User Account) -->
+        <div class="nav-actions">
+          <a href="#inquirySection" class="btn-nav-inquire">Inquire Vehicle</a>
+          <button type="button" class="btn-nav-user-circle" id="userAuthBtn" title="Customer Account" aria-label="Customer Account">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="user-active-badge" id="userActiveBadge" style="display:none;"></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero & 3-Car Showcase ("Inquire us") Section -->
+  <main>
+    <section id="showcase" class="showcase-section">
+      <div class="container">
+        
+        <!-- Section Header -->
+        <div class="section-header">
+          <div class="section-pill-tag">
+            <span class="section-pill-dot"></span>
+            Bespoke Engineering & Exotic Fleet
+          </div>
+          <h1 class="section-title">
+            INQUIRE <span>US</span>
+          </h1>
+          <p class="section-subtitle">
+            Hover over any build to inspect specs. Other vehicles automatically blur into the background as technical telemetry expands beside your selection.
+          </p>
+        </div>
+
+        <!-- Casino 3D Turntable / Roulette Reel Showcase -->
+        <div class="casino-stage-container" id="casinoStageContainer">
+          
+          <!-- Turntable Floor Glow & Rings -->
+          <div class="casino-turntable-floor">
+            <div class="casino-floor-ring ring-outer"></div>
+            <div class="casino-floor-ring ring-inner"></div>
+          </div>
+          <div class="casino-floor-spotlight"></div>
+
+          <!-- 3D Carousel Cylinder Track -->
+          <div class="casino-cylinder-stage" id="casinoCylinder">
+            
+            <!-- Car 1: Ferrari SF90 -->
+            <div class="casino-car-item" 
+                 data-index="0" 
+                 data-id="1" 
+                 data-name="Ferrari SF90 Stradale Crimson Edition" 
+                 data-wheel="UW-F01 Monoblock Forged" 
+                 data-status="AVAILABLE" 
+                 data-front='21" x 9.5J ET28' 
+                 data-rear='22" x 12.5J ET38' 
+                 data-finish="Candy Dark Red" 
+                 data-alloy="6061-T6 Aerospace Forged" 
+                 data-weight="9.8 kg / wheel" 
+                 data-image="assets/images/cars/car-1.png">
+              <div class="casino-cutout-wrap">
+                <img src="assets/images/cars/car-1.png" alt="Ferrari SF90 Stradale" class="casino-cutout-img" loading="eager" draggable="false">
+                <div class="casino-car-glow"></div>
+              </div>
+              <div class="casino-floating-tag">
+                <span class="casino-tag-num">01 //</span>
+                <span class="casino-tag-name">Ferrari SF90 Stradale</span>
+              </div>
+            </div>
+
+            <!-- Car 2: Apollo IE -->
+            <div class="casino-car-item" 
+                 data-index="1" 
+                 data-id="2" 
+                 data-name="Apollo Intensa Emozione Carbon/Crimson" 
+                 data-wheel="UW-R09 Carbon-Forged Track" 
+                 data-status="BESPOKE" 
+                 data-front='20" x 10.0J ET22' 
+                 data-rear='21" x 13.0J ET30' 
+                 data-finish="Dark Crimson Tint" 
+                 data-alloy="Carbon Barrel + Forged Center" 
+                 data-weight="8.4 kg / wheel" 
+                 data-image="assets/images/cars/car-2.png">
+              <div class="casino-cutout-wrap">
+                <img src="assets/images/cars/car-2.png" alt="Apollo Intensa Emozione" class="casino-cutout-img" loading="eager" draggable="false">
+                <div class="casino-car-glow"></div>
+              </div>
+              <div class="casino-floating-tag">
+                <span class="casino-tag-num">02 //</span>
+                <span class="casino-tag-name">Apollo Intensa Emozione</span>
+              </div>
+            </div>
+
+            <!-- Car 3: Nissan GT-R -->
+            <div class="casino-car-item" 
+                 data-index="2" 
+                 data-id="3" 
+                 data-name="Nissan GT-R Nismo Widebody Edition" 
+                 data-wheel="UW-DD3 Deep Lip 3-Piece" 
+                 data-status="RECOMMENDED" 
+                 data-front='20" x 11.0J ET-5' 
+                 data-rear='20" x 12.5J ET-15' 
+                 data-finish="Anodized Dark Red Lip" 
+                 data-alloy="3-Piece Modular Forged" 
+                 data-weight="10.5 kg / wheel" 
+                 data-image="assets/images/cars/car-3.png">
+              <div class="casino-cutout-wrap">
+                <img src="assets/images/cars/car-3.png" alt="Nissan GT-R Nismo Widebody" class="casino-cutout-img" loading="eager" draggable="false">
+                <div class="casino-car-glow"></div>
+              </div>
+              <div class="casino-floating-tag">
+                <span class="casino-tag-num">03 //</span>
+                <span class="casino-tag-name">Nissan GT-R Widebody</span>
+              </div>
+            </div>
+
+            <!-- Car 4: Lamborghini Revuelto -->
+            <div class="casino-car-item" 
+                 data-index="3" 
+                 data-id="5" 
+                 data-name="Lamborghini Revuelto V12 Hybrid" 
+                 data-wheel="UW-SV7 Carbon-Forged Monoblock" 
+                 data-status="AVAILABLE" 
+                 data-front='20" x 9.5J ET25' 
+                 data-rear='21" x 12.5J ET35' 
+                 data-finish="Candy Crimson Metallic" 
+                 data-alloy="Aero-Forged Monoblock" 
+                 data-weight="9.2 kg / wheel" 
+                 data-image="assets/images/cars/car-5.png">
+              <div class="casino-cutout-wrap">
+                <img src="assets/images/cars/car-5.png" alt="Lamborghini Revuelto" class="casino-cutout-img" loading="eager" draggable="false">
+                <div class="casino-car-glow"></div>
+              </div>
+              <div class="casino-floating-tag">
+                <span class="casino-tag-num">04 //</span>
+                <span class="casino-tag-name">Lamborghini Revuelto</span>
+              </div>
+            </div>
+
+            <!-- Car 5: Corvette C8 Z06 -->
+            <div class="casino-car-item" 
+                 data-index="4" 
+                 data-id="6" 
+                 data-name="Chevrolet Corvette C8 Z06 Carbon Aero" 
+                 data-wheel="UW-Z06 Concave Forged" 
+                 data-status="AVAILABLE" 
+                 data-front='20" x 10.0J ET30' 
+                 data-rear='21" x 13.0J ET42' 
+                 data-finish="Metallic Dark Wine Red" 
+                 data-alloy="Deep Concave Forged Monoblock" 
+                 data-weight="9.6 kg / wheel" 
+                 data-image="assets/images/cars/car-6.png">
+              <div class="casino-cutout-wrap">
+                <img src="assets/images/cars/car-6.png" alt="Chevrolet Corvette C8 Z06" class="casino-cutout-img" loading="eager" draggable="false">
+                <div class="casino-car-glow"></div>
+              </div>
+              <div class="casino-floating-tag">
+                <span class="casino-tag-num">05 //</span>
+                <span class="casino-tag-name">Corvette C8 Z06</span>
+              </div>
+            </div>
+
+            <!-- Car 6: McLaren 765LT -->
+            <div class="casino-car-item" 
+                 data-index="5" 
+                 data-id="8" 
+                 data-name="McLaren 765LT Carbon Longtail" 
+                 data-wheel="UW-LT9 Ultra-Light Track" 
+                 data-status="BESPOKE" 
+                 data-front='19" x 9.0J ET18' 
+                 data-rear='20" x 11.5J ET26' 
+                 data-finish="Candy Crimson Satin" 
+                 data-alloy="Forged Magnesium/Alloy" 
+                 data-weight="7.9 kg / wheel" 
+                 data-image="assets/images/cars/car-8.png">
+              <div class="casino-cutout-wrap">
+                <img src="assets/images/cars/car-8.png" alt="McLaren 765LT" class="casino-cutout-img" loading="eager" draggable="false">
+                <div class="casino-car-glow"></div>
+              </div>
+              <div class="casino-floating-tag">
+                <span class="casino-tag-num">06 //</span>
+                <span class="casino-tag-name">McLaren 765LT</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Left & Right Roll Casino Controls -->
+          <button type="button" class="casino-nav-btn roll-left" id="casinoRollLeft" aria-label="Roll Left">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <span class="nav-text">ROLL LEFT</span>
+          </button>
+          <button type="button" class="casino-nav-btn roll-right" id="casinoRollRight" aria-label="Roll Right">
+            <span class="nav-text">ROLL RIGHT</span>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+
+          <!-- Carousel Indicators / Dot Ticks -->
+          <div class="casino-indicators" id="casinoIndicators"></div>
+
+        </div>
+
+        <!-- Active Front Vehicle Cockpit HUD -->
+        <div class="casino-active-hud" id="casinoActiveHud">
+          <div class="hud-top-bar">
+            <div class="hud-badge-group">
+              <span class="hud-rec-badge">★ RECOMMENDED SHOWCASE</span>
+              <span class="hud-status-badge" id="hudStatusBadge">● AVAILABLE</span>
+            </div>
+            <div class="hud-index-tracker" id="hudIndexTracker">
+              <span id="hudCurrentNum">01</span> / <span id="hudTotalNum">06</span>
+            </div>
+          </div>
+
+          <div class="hud-main-content">
+            <div class="hud-title-col">
+              <h2 class="hud-car-title" id="hudCarTitle">Ferrari SF90 Stradale Crimson Edition</h2>
+              <div class="hud-wheel-title" id="hudWheelTitle">UW-F01 Monoblock Forged</div>
+            </div>
+
+            <div class="hud-specs-grid">
+              <div class="hud-spec-item">
+                <span class="hud-k">Front Fitment</span>
+                <span class="hud-v" id="hudFront">21" x 9.5J ET28</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="hud-k">Rear Fitment</span>
+                <span class="hud-v" id="hudRear">22" x 12.5J ET38</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="hud-k">Wheel Finish</span>
+                <span class="hud-v" id="hudFinish">Candy Dark Red</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="hud-k">Alloy / Construction</span>
+                <span class="hud-v" id="hudAlloy">6061-T6 Aerospace</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="hud-k">Wheel Weight</span>
+                <span class="hud-v" id="hudWeight">9.8 kg / wheel</span>
+              </div>
+            </div>
+
+            <div class="hud-action-col">
+              <button type="button" class="btn-hud-inquire" id="hudInquireBtn">
+                <span>Inquire This Vehicle</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Inquiry Section ("Inquire us" Form) -->
+        <div id="inquirySection" class="inquiry-wrapper">
+          <div class="inquiry-grid">
+            
+            <!-- Left Info Panel -->
+            <div class="inquiry-info-pane">
+              <div class="section-pill-tag" style="margin-bottom: 1rem;">
+                <span class="section-pill-dot"></span>
+                VIP In-Person Consultation
+              </div>
+              <h3>DIRECT DEALERSHIP <span>SHOWROOM TALK</span></h3>
+              <p>
+                Skip impersonal online forms and complex technical guesswork. We believe luxury vehicle acquisitions are best experienced face-to-face. Schedule a dedicated private showroom appointment with our senior acquisition directors.
+              </p>
+
+              <div class="benefits-list">
+                <div class="benefit-item">
+                  <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  </div>
+                  <div class="benefit-text">
+                    <h4>Dedicated Private Showroom Host</h4>
+                    <p>Enjoy private 1-on-1 showroom access, key-in-hand vehicle walkthroughs, cold starts, and immediate answering of every detail.</p>
+                  </div>
+                </div>
+
+                <div class="benefit-item">
+                  <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                  </div>
+                  <div class="benefit-text">
+                    <h4>On-The-Spot Trade & Valuation</h4>
+                    <p>Bring your current vehicle for instant physical inspection and guaranteed appraisal while we review your acquisition terms.</p>
+                  </div>
+                </div>
+
+                <div class="benefit-item">
+                  <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                  </div>
+                  <div class="benefit-text">
+                    <h4>Door-to-Door Enclosed Transport</h4>
+                    <p>White-glove enclosed transport shipped door-to-door with complete logistics support and insurance coverage worldwide.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Brand Logo Box -->
+              <div style="display: flex; align-items: center; gap: 15px; padding: 14px 20px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--border-subtle);">
+                <img src="assets/images/logo.png" alt="UniWheels Emblem" style="height: 58px; width: auto;">
+                <div>
+                  <div style="font-family: var(--font-heading); font-weight: 800; font-size: 1.1rem; color: #fff;">UNI<span style="color:var(--wheels-crimson);">WHEELS</span> MOTORS</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Premier Exotic & High-Performance Dealership</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Interactive Form -->
+            <div class="inquiry-form-card">
+              <div style="margin-bottom: 1.25rem;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.35rem;">
+                  <span style="font-family:var(--font-heading); font-size:0.75rem; font-weight:800; color:var(--wheels-neon); letter-spacing:0.12em; text-transform:uppercase;">
+                    ● Direct Showroom Inquiry
+                  </span>
+                  <span style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">
+                    Face-To-Face Consultation
+                  </span>
+                </div>
+                <h4 style="font-family:var(--font-heading); font-size:1.25rem; font-weight:800; color:#fff; margin:0 0 4px 0;">
+                  Schedule A Private Showroom Meeting
+                </h4>
+                <p style="font-size:0.8rem; color:var(--text-sub); line-height:1.4; margin:0;">
+                  No guesswork needed. Connect directly with our dealership concierge to arrange an in-person viewing, test drive, or custom consultation.
+                </p>
+              </div>
+
+              <!-- Consultation Type Selector -->
+              <div class="form-group" style="margin-bottom:1rem;">
+                <label class="form-label">Consultation Type</label>
+                <div class="pill-selector" id="inquiryTypeSelector">
+                  <span class="pill-option active" data-value="Showroom Visit (Face-to-Face)">Showroom Visit (Face-to-Face)</span>
+                  <span class="pill-option" data-value="Private VIP Viewing & Test Drive">Private Viewing & Test Drive</span>
+                  <span class="pill-option" data-value="Vehicle Acquisition & Trade-In">Vehicle Acquisition & Trade-In</span>
+                  <span class="pill-option" data-value="Custom Fleet Sourcing">Custom Fleet Sourcing</span>
+                </div>
+                <input type="hidden" name="inquiry_type" id="inquiryTypeInput" value="Showroom Visit (Face-to-Face)">
+              </div>
+
+              <form id="inquiryForm" method="POST" action="submit-inquiry.php">
+                <div class="form-group">
+                  <label class="form-label" for="selectedCarInput">Target Vehicle / Fleet Focus</label>
+                  <select name="selected_car" id="selectedCarInput" class="form-control" style="background:#14141f; color:#fff;" required>
+                    <option value="Ferrari SF90 Stradale Crimson Edition">Ferrari SF90 Stradale Crimson Edition</option>
+                    <option value="Apollo Intensa Emozione Carbon / Crimson">Apollo Intensa Emozione Carbon / Crimson</option>
+                    <option value="Nissan GT-R Nismo Widebody Edition">Nissan GT-R Nismo Widebody Edition</option>
+                    <option value="Porsche 911 GT3 RS Track Edition">Porsche 911 GT3 RS Track Edition</option>
+                    <option value="Lamborghini Huracán STO Squadra Corse">Lamborghini Huracán STO Squadra Corse</option>
+                    <option value="Chevrolet Corvette C8 Z06 Widebody">Chevrolet Corvette C8 Z06 Widebody</option>
+                    <option value="BMW M4 Competition G82 Widebody">BMW M4 Competition G82 Widebody</option>
+                    <option value="McLaren 765LT Carbon Longtail">McLaren 765LT Carbon Longtail</option>
+                    <option value="General Showroom Fleet (Multiple Cars)">General Showroom Fleet (Multiple Cars)</option>
+                    <option value="Custom Vehicle Sourcing Request">Custom Vehicle Sourcing Request</option>
+                  </select>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="clientName">Full Name *</label>
+                    <input type="text" name="client_name" id="clientName" class="form-control" placeholder="e.g. Julian Thorne" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="clientPhone">Phone / WhatsApp Number *</label>
+                    <input type="tel" name="client_phone" id="clientPhone" class="form-control" placeholder="e.g. +1 (555) 234-5678" required>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="clientEmail">Email Address *</label>
+                    <input type="email" name="client_email" id="clientEmail" class="form-control" placeholder="e.g. julian@domain.com" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="preferredDate">Preferred Date / Timing</label>
+                    <input type="text" name="preferred_date" id="preferredDate" class="form-control" placeholder="e.g. Tomorrow at 2:00 PM, Saturday morning...">
+                  </div>
+                </div>
+
+                <!-- Quick Time Window Suggestions -->
+                <div class="form-group" style="margin-top:-0.5rem; margin-bottom:1.15rem;">
+                  <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.05em;">Quick Suggestions:</div>
+                  <div class="pill-selector" id="quickDatePills" style="gap:6px;">
+                    <button type="button" class="pill-option" data-date="Today (Immediate Walk-in)">Today (Immediate)</button>
+                    <button type="button" class="pill-option" data-date="Tomorrow Afternoon (2:00 PM)">Tomorrow Afternoon</button>
+                    <button type="button" class="pill-option" data-date="This Saturday Morning (11:00 AM)">This Saturday Morning</button>
+                    <button type="button" class="pill-option" data-date="Next Week Flexible Window">Next Week Flexible</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="clientMessage">Inquiry Details & In-Person Meeting Notes</label>
+                  <textarea name="client_message" id="clientMessage" class="form-control" rows="3" placeholder="Tell us what you would like to discuss (e.g., trade-in inspection, cold start & private test drive, wheel customization, or acquisition terms)..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-inquiry" id="submitInquiryBtn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  <span>Request Face-To-Face Consultation</span>
+                </button>
+
+                <div id="inquiryStatusFeedback" style="display:none; margin-top:1rem; padding:1.25rem; border-radius:10px; font-size:0.85rem; line-height:1.5;"></div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Trust & Quality Strip -->
+    <section id="about" style="padding: 3rem 0; border-top: 1px solid var(--border-subtle); background: #060609;">
+      <div class="container">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center;">
+          <div>
+            <div style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: #fff;">6061-T6</div>
+            <div style="font-size: 0.8rem; color: var(--wheels-crimson); font-weight: 700; text-transform: uppercase;">Aerospace Forged Aluminum</div>
+          </div>
+          <div>
+            <div style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: #fff;">10,000+</div>
+            <div style="font-size: 0.8rem; color: var(--wheels-crimson); font-weight: 700; text-transform: uppercase;">Tons Forging Pressure</div>
+          </div>
+          <div>
+            <div style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: #fff;">100%</div>
+            <div style="font-size: 0.8rem; color: var(--wheels-crimson); font-weight: 700; text-transform: uppercase;">100-Point Inspection & Certified</div>
+          </div>
+          <div>
+            <div style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: #fff;">LIFETIME</div>
+            <div style="font-size: 0.8rem; color: var(--wheels-crimson); font-weight: 700; text-transform: uppercase;">Structural Warranty</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Technical Specs Modal -->
+  <div id="specsModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalCarTitle" class="modal-title">Vehicle Technical Specs</h3>
+        <button type="button" id="modalCloseBtn" class="modal-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div id="modalContentBody" class="modal-body">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Login & Sign Up Modal (Operating on `users` table) -->
+  <div id="customerAuthModal" class="customer-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="customer-modal-dialog">
+      <div class="customer-modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="assets/images/logo.png" alt="UniWheels" style="height:28px; width:auto; filter:drop-shadow(0 0 8px rgba(196,21,46,0.6));">
+          <div class="customer-modal-title">
+            <span style="color:#fff;">CUSTOMER</span> <span style="color:var(--wheels-crimson);">ACCESS</span>
+          </div>
+        </div>
+        <button type="button" class="customer-modal-close" id="customerModalClose" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Auth State 1: Guest (Sign In / Register) -->
+      <div id="authGuestView">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" id="tabBtnLogin" onclick="switchCustomerAuthTab('login')">Sign In</button>
+          <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchCustomerAuthTab('register')">Create Account</button>
+        </div>
+
+        <div class="customer-modal-body">
+          <div id="authFeedback" class="auth-feedback-box"></div>
+
+          <!-- Sign In Form -->
+          <form id="customerLoginForm" onsubmit="handleCustomerLogin(event)">
+            <div class="auth-form-group">
+              <label class="auth-label" for="loginIdentifier">Username or Email</label>
+              <input type="text" id="loginIdentifier" class="auth-input" placeholder="e.g. jferrari or julian@example.com" required>
+            </div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-auth-submit" id="loginSubmitBtn">Sign In to UniWheels &rarr;</button>
+            <div style="text-align:center; margin-top:14px; font-size:0.78rem; color:var(--text-sub);">
+              Don't have an account? <a href="javascript:void(0)" onclick="switchCustomerAuthTab('register')" style="color:var(--wheels-neon); font-weight:600; text-decoration:underline;">Create one now</a>
+            </div>
+          </form>
+
+          <!-- Register Form -->
+          <form id="customerRegisterForm" style="display:none;" onsubmit="handleCustomerRegister(event)">
+            <div class="auth-form-group">
+              <label class="auth-label" for="regFullName">Full Name</label>
+              <input type="text" id="regFullName" class="auth-input" placeholder="e.g. Julian Ferrari" required>
+            </div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="regUsername">Username</label>
+              <input type="text" id="regUsername" class="auth-input" placeholder="e.g. jferrari" required>
+            </div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="regEmail">Email Address</label>
+              <input type="email" id="regEmail" class="auth-input" placeholder="e.g. julian@example.com" required>
+            </div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="regPassword">Password (6+ characters)</label>
+              <input type="password" id="regPassword" class="auth-input" placeholder="••••••••" minlength="6" required>
+            </div>
+            <button type="submit" class="btn-auth-submit" id="regSubmitBtn">Create Customer Account &rarr;</button>
+            <div style="text-align:center; margin-top:14px; font-size:0.78rem; color:var(--text-sub);">
+              Already have an account? <a href="javascript:void(0)" onclick="switchCustomerAuthTab('login')" style="color:var(--wheels-neon); font-weight:600; text-decoration:underline;">Sign in here</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Auth State 2: Logged-in Customer View -->
+      <div id="authCustomerView" style="display:none;" class="customer-modal-body">
+        <div class="customer-profile-view">
+          <div class="customer-profile-avatar-big">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="customer-profile-name" id="custProfileName">Customer</div>
+          <div class="customer-profile-email" id="custProfileEmail">customer@example.com</div>
+          <div class="customer-profile-badge">● Verified Client</div>
+
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:1rem;">
+            <a href="#showcase" class="btn-nav-inquire" style="text-align:center; justify-content:center;" onclick="closeCustomerModal()">Explore Featured Builds</a>
+            <button type="button" class="btn-side-specs" style="width:100%;" onclick="handleCustomerLogout()">Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  // Customer Authentication Controller for preview.html
+  (function() {
+    const authBtn = document.getElementById('userAuthBtn');
+    const authModal = document.getElementById('customerAuthModal');
+    const closeBtn = document.getElementById('customerModalClose');
+    const userBtnText = document.getElementById('userBtnText');
+    const authGuestView = document.getElementById('authGuestView');
+    const authCustomerView = document.getElementById('authCustomerView');
+    const feedbackBox = document.getElementById('authFeedback');
+    const custName = document.getElementById('custProfileName');
+    const custEmail = document.getElementById('custProfileEmail');
+
+    const authEndpoint = 'customer-auth.php';
+
+    function checkSession() {
+      fetch(authEndpoint + '?action=check')
+        .then(res => res.json())
+        .then(data => {
+          if (data.logged_in && data.user) {
+            setLoggedInState(data.user);
+          } else {
+            setLoggedOutState();
+          }
+        })
+        .catch(() => setLoggedOutState());
+    }
+
+    function setLoggedInState(user) {
+      if (authBtn) {
+        authBtn.classList.add('logged-in');
+        authBtn.title = "Account: " + (user.name || 'Client');
+      }
+      const badge = document.getElementById('userActiveBadge');
+      if (badge) badge.style.display = 'block';
+      if (authGuestView) authGuestView.style.display = 'none';
+      if (authCustomerView) authCustomerView.style.display = 'block';
+      if (custName) custName.textContent = user.name;
+      if (custEmail) custEmail.textContent = user.email;
+    }
+
+    function setLoggedOutState() {
+      if (authBtn) {
+        authBtn.classList.remove('logged-in');
+        authBtn.title = "Customer Account";
+      }
+      const badge = document.getElementById('userActiveBadge');
+      if (badge) badge.style.display = 'none';
+      if (authGuestView) authGuestView.style.display = 'block';
+      if (authCustomerView) authCustomerView.style.display = 'none';
+    }
+
+    if (authBtn && authModal) {
+      authBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        authModal.classList.add('active');
+      });
+    }
+
+    if (closeBtn && authModal) {
+      closeBtn.addEventListener('click', () => {
+        authModal.classList.remove('active');
+      });
+    }
+
+    if (authModal) {
+      authModal.addEventListener('click', (e) => {
+        if (e.target === authModal) authModal.classList.remove('active');
+      });
+    }
+
+    window.closeCustomerModal = function() {
+      if (authModal) authModal.classList.remove('active');
+    };
+
+    window.switchCustomerAuthTab = function(tab) {
+      const tabLogin = document.getElementById('tabBtnLogin');
+      const tabReg = document.getElementById('tabBtnRegister');
+      const formLogin = document.getElementById('customerLoginForm');
+      const formReg = document.getElementById('customerRegisterForm');
+      if (feedbackBox) {
+        feedbackBox.className = 'auth-feedback-box';
+        feedbackBox.textContent = '';
+        feedbackBox.style.display = 'none';
+      }
+
+      if (tab === 'login') {
+        tabLogin.classList.add('active');
+        tabReg.classList.remove('active');
+        formLogin.style.display = 'block';
+        formReg.style.display = 'none';
+      } else {
+        tabReg.classList.add('active');
+        tabLogin.classList.remove('active');
+        formReg.style.display = 'block';
+        formLogin.style.display = 'none';
+      }
+    };
+
+    window.handleCustomerLogin = function(e) {
+      e.preventDefault();
+      const identifier = document.getElementById('loginIdentifier').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+
+      fetch(authEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', identifier, password })
+      })
+      .then(r => r.json())
+      .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In to UniWheels →';
+        if (data.success) {
+          showFeedback(data.message, 'success');
+          setTimeout(() => {
+            setLoggedInState(data.user);
+            if (authModal) authModal.classList.remove('active');
+          }, 800);
+        } else {
+          showFeedback(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In to UniWheels →';
+        showFeedback('Server connection error. Please try again.', 'error');
+      });
+    };
+
+    window.handleCustomerRegister = function(e) {
+      e.preventDefault();
+      const full_name = document.getElementById('regFullName').value.trim();
+      const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+      const submitBtn = document.getElementById('regSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+
+      fetch(authEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'register', full_name, username, email, password })
+      })
+      .then(r => r.json())
+      .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Customer Account →';
+        if (data.success) {
+          showFeedback(data.message, 'success');
+          setTimeout(() => {
+            setLoggedInState(data.user);
+            if (authModal) authModal.classList.remove('active');
+          }, 900);
+        } else {
+          showFeedback(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Customer Account →';
+        showFeedback('Server connection error. Please try again.', 'error');
+      });
+    };
+
+    window.handleCustomerLogout = function() {
+      fetch(authEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' })
+      })
+      .then(r => r.json())
+      .then(() => {
+        setLoggedOutState();
+        switchCustomerAuthTab('login');
+        if (authModal) authModal.classList.remove('active');
+      })
+      .catch(() => {
+        setLoggedOutState();
+        if (authModal) authModal.classList.remove('active');
+      });
+    };
+
+    function showFeedback(msg, type) {
+      if (feedbackBox) {
+        feedbackBox.className = 'auth-feedback-box ' + type;
+        feedbackBox.textContent = msg;
+        feedbackBox.style.display = 'block';
+      }
+    }
+
+    checkSession();
+  })();
+  </script>
+
+  <!-- Notification Toast -->
+  <div id="toastNotice" class="toast-notice" role="alert">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e52945" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      <span id="toastMessage" style="font-weight: 600; font-size: 0.9rem;">Build Selected</span>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- Brand Col -->
+        <div class="footer-col">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem;">
+            <img src="assets/images/logo.png" alt="UniWheels Official Logo" style="height: 48px; width: auto;">
+            <span class="brand-logo-text" style="font-size: 1.4rem;">
+              <span class="brand-uni">UNI</span><span class="brand-wheels">WHEELS</span>
+            </span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 320px; margin-bottom: 1.5rem;">
+            Premier bespoke wheel engineering and high-performance exotic automotive acquisitions. Designed with passion, precision, and power.
+          </p>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">
+            Location: High-Performance Design Studio & Showroom
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="footer-col">
+          <h5>Navigation</h5>
+          <ul class="footer-links">
+            <li><a href="#showcase">Featured Vehicles</a></li>
+            <li><a href="#showcase">Forged Monoblock</a></li>
+            <li><a href="#showcase">Multi-Piece Modular</a></li>
+            <li><a href="#inquirySection">Inquire Us</a></li>
+            <li><a href="#about">Dealership Warranty</a></li>
+          </ul>
+        </div>
+
+        <!-- Finishes -->
+        <div class="footer-col">
+          <h5>Signature Finishes</h5>
+          <ul class="footer-links">
+            <li><a href="#inquirySection">Candy Apple Crimson</a></li>
+            <li><a href="#inquirySection">Anodized Dark Wine Red</a></li>
+            <li><a href="#inquirySection">Satin Obsidian Black</a></li>
+            <li><a href="#inquirySection">Brushed Liquid Smoke</a></li>
+            <li><a href="#inquirySection">Gloss Carbon Fiber Lip</a></li>
+          </ul>
+        </div>
+
+        <!-- Direct Inquiries -->
+        <div class="footer-col">
+          <h5>Direct Inquiries</h5>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.8rem;">
+            Speak directly with an automotive fitment engineer:
+          </p>
+          <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem;">
+            contact@uniwheels.com
+          </div>
+          <div style="color: var(--wheels-bright-red); font-size: 0.95rem; font-weight: 600; margin-bottom: 1.25rem;">
+            +1 (800) 864-9433
+          </div>
+          <a href="#inquirySection" class="btn-nav-inquire" style="width: 100%; text-align: center; justify-content: center;">Start Custom Order</a>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 UniWheels Performance Inc. All Rights Reserved.</div>
+        <div style="display: flex; gap: 1.5rem;">
+          <a href="#privacy" style="color: var(--text-muted);">Privacy Policy</a>
+          <a href="#terms" style="color: var(--text-muted);">Terms of Service</a>
+          <a href="#fitment" style="color: var(--text-muted);">Fitment Warranty</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
