@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 28, 2026 at 04:53 AM
+-- Generation Time: Sep 28, 2026 at 04:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -110,17 +110,6 @@ CREATE TABLE `inquiries` (
   `staff_notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `inquiries`
---
-
-INSERT INTO `inquiries` (`id`, `name`, `email`, `phone`, `vehicle_name`, `inquiry_type`, `preferred_date`, `message`, `status`, `staff_notes`, `created_at`) VALUES
-(1, 'Julian Thorne', 'jthorne@vanceholdings.com', '+1 (555) 489-2104', 'Ferrari SF90 Stradale Crimson Edition', 'Showroom Visit (Face-to-Face)', 'Tomorrow, 2:00 PM', 'Looking to inspect the SF90 Crimson edition in person. Would like to test drive and discuss cash purchase and enclosed transport options.', 'ongoing', 'VIP client. Assigned to Sales Rep Marcus. Test drive prep scheduled.', '2026-09-27 14:56:22'),
-(2, 'Elena Rostova', 'elena.rostova@monacofund.mc', '+1 (555) 732-9012', 'Apollo Intensa Emozione Carbon/Crimson', 'Executive VIP Consultation', 'This Saturday, 11:00 AM', 'Interested in bespoke Apollo IE allocation and custom wheel finish options for track use. Please arrange private showroom slot.', 'new', 'Requires Super Admin confirmation for track spec clearance.', '2026-09-27 14:56:22'),
-(3, 'Marcus Sterling', 'msterling@apexcapital.org', '+1 (555) 219-8840', 'Porsche 911 GT3 RS Track Edition', 'Vehicle Acquisition & Inspection', 'Yesterday', 'Visited showroom, verified centerlock fitments, vehicle acquisition contract signed.', 'completed', 'Acquisition completed. Delivery scheduled via enclosed transporter next Tuesday.', '2026-09-27 14:56:22'),
-(4, 'Alexander Vance', 'avance@apex.com', '+1 (555) 902-1244', 'McLaren 765LT Carbon Longtail', 'Showroom Visit (Face-to-Face)', 'Tomorrow Afternoon at 3:00 PM', 'Interested in inspecting 765LT face-to-face.', 'new', NULL, '2026-09-27 15:01:26'),
-(5, 'Sophia Sterling', 'sophia.sterling@vanguard.co.uk', '+44 7700 900142', 'Porsche 911 GT3 RS Track Edition', 'Private VIP Viewing & Test Drive', 'This Saturday Morning (11:00 AM)', 'Would like to arrange a private 1-on-1 showroom viewing and cold start for the 911 GT3 RS before placing a deposit.', 'new', NULL, '2026-09-27 15:07:49');
 
 -- --------------------------------------------------------
 
@@ -818,7 +807,7 @@ ALTER TABLE `employees`
 -- AUTO_INCREMENT for table `inquiries`
 --
 ALTER TABLE `inquiries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `roles`
