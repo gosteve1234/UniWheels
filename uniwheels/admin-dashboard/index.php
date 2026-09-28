@@ -2008,10 +2008,10 @@ if (!in_array($current_tab, $allowed_tabs)) {
                   </td>
                   <td>
                     <div style="font-family:var(--font-heading); font-weight:800; font-size:1rem; color:#fff;">
-                      $<?php echo number_format($c['price'] ?: 0, 0); ?>
+                      ₱<?php echo number_format($c['price'] ?: 0, 0); ?>
                     </div>
                     <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">
-                      Est. $<?php echo number_format(($c['price'] * 0.8 * (0.059/12) * pow(1 + 0.059/12, 60)) / (pow(1 + 0.059/12, 60) - 1), 0); ?>/mo
+                      Est. ₱<?php echo number_format(($c['price'] * 0.8 * (0.059/12) * pow(1 + 0.059/12, 60)) / (pow(1 + 0.059/12, 60) - 1), 0); ?>/mo
                     </div>
                   </td>
                   <td>
@@ -2608,7 +2608,7 @@ if (!in_array($current_tab, $allowed_tabs)) {
               </datalist>
             </div>
             <div class="form-group">
-              <label class="form-label" for="add_price">Price ($ USD) *</label>
+              <label class="form-label" for="add_price">Price (₱ PHP) *</label>
               <input type="number" step="1000" name="price" id="add_price" class="form-input" placeholder="e.g. 450000" value="250000" required>
             </div>
             <div class="form-group">
@@ -2770,7 +2770,7 @@ if (!in_array($current_tab, $allowed_tabs)) {
               <input type="text" name="brand" id="edit_brand" list="brandDatalist" class="form-input" required>
             </div>
             <div class="form-group">
-              <label class="form-label" for="edit_price">Price ($ USD) *</label>
+              <label class="form-label" for="edit_price">Price (₱ PHP) *</label>
               <input type="number" step="1000" name="price" id="edit_price" class="form-input" required>
             </div>
             <div class="form-group">

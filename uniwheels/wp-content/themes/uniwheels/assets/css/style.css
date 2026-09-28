@@ -631,8 +631,8 @@ img {
 
 .hud-main-content {
   display: grid;
-  grid-template-columns: 1.4fr 2fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 1.15fr 1.85fr;
+  gap: 2rem;
   align-items: center;
 }
 
@@ -652,6 +652,27 @@ img {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.hud-stock-sub {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.hud-price-badge {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(196, 21, 46, 0.25);
+  border: 1px solid var(--border-red);
+  padding: 4px 12px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 12px rgba(196, 21, 46, 0.3);
 }
 
 .hud-specs-grid {
@@ -689,20 +710,87 @@ img {
   text-overflow: ellipsis;
 }
 
+/* Active Car Cockpit HUD Action Bar (Spacious 3-Button Luxury Layout) */
+.hud-actions-bar {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-top: 1.35rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-hud-messenger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #0084ff 0%, #a824e8 50%, #c4152e 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 22px;
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0, 132, 255, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-hud-messenger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 132, 255, 0.55), 0 0 20px rgba(196, 21, 46, 0.5);
+  filter: brightness(1.12);
+}
+
+.btn-hud-finance {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #fff;
+  padding: 13px 20px;
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.btn-hud-finance:hover {
+  background: rgba(196, 21, 46, 0.2);
+  border-color: var(--wheels-bright-red);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196, 21, 46, 0.35);
+}
+
 .btn-hud-inquire {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 14px 18px;
+  padding: 13px 20px;
   background: linear-gradient(135deg, var(--wheels-bright-red) 0%, var(--wheels-crimson) 100%);
   border: 1px solid var(--wheels-neon);
   color: #fff;
   font-family: var(--font-heading);
   font-size: 0.82rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   border-radius: 12px;
   cursor: pointer;
   box-shadow: 0 8px 25px rgba(196, 21, 46, 0.5);
@@ -2112,7 +2200,7 @@ textarea.form-control {
    ======================================================== */
 .inventory-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 1.75rem;
 }
 
@@ -2277,25 +2365,25 @@ textarea.form-control {
 
 .card-actions-bar {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: auto;
 }
 
 /* One-Click Messenger Redirect Button (Features #2 & #7) */
-.btn-card-messenger,
-.btn-hud-messenger {
-  flex: 1.5;
+.btn-card-messenger {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   background: linear-gradient(135deg, #0084ff 0%, #a824e8 50%, #c4152e 100%);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 9px;
+  padding: 11px 16px;
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2304,24 +2392,26 @@ textarea.form-control {
   box-shadow: 0 4px 15px rgba(0, 132, 255, 0.3);
 }
 
-.btn-card-messenger:hover,
-.btn-hud-messenger:hover {
+.btn-card-messenger:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 132, 255, 0.5), 0 0 15px rgba(196, 21, 46, 0.5);
   filter: brightness(1.1);
 }
 
+.card-actions-sub-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .btn-card-calc,
-.btn-hud-finance {
+.btn-card-inquire {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: #fff;
-  padding: 10px 12px;
+  padding: 9px 10px;
   font-family: var(--font-heading);
   font-size: 0.72rem;
   font-weight: 800;
@@ -2329,45 +2419,32 @@ textarea.form-control {
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.btn-card-calc:hover,
-.btn-hud-finance:hover {
+.btn-card-calc {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: #fff;
+}
+
+.btn-card-calc:hover {
   background: rgba(196, 21, 46, 0.2);
   border-color: var(--border-red);
   color: var(--wheels-neon);
 }
 
 .btn-card-inquire {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   background: transparent;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
   color: var(--text-sub);
-  padding: 10px 10px;
-  font-family: var(--font-heading);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .btn-card-inquire:hover {
   border-color: #fff;
   color: #fff;
-}
-
-.btn-hud-messenger {
-  padding: 12px 20px;
-  font-size: 0.85rem;
-}
-
-.btn-hud-finance {
-  padding: 12px 16px;
-  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ========================================================
@@ -2696,28 +2773,336 @@ textarea.form-control {
   margin: 0 0 1.25rem 0;
 }
 
-/* Responsive adjustments */
+/* ==========================================================================
+   COMPREHENSIVE HIGH-PERFORMANCE MOBILE & TABLET RESPONSIVENESS
+   ========================================================================== */
+
+/* Tablet & Smaller Laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .casino-stage-container {
+    height: 420px;
+  }
+  .casino-car-item {
+    width: 500px;
+  }
+  .hud-main-content {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .hud-actions-bar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .btn-hud-messenger,
+  .btn-hud-finance,
+  .btn-hud-inquire {
+    width: 100%;
+    padding: 13px 18px;
+    font-size: 0.8rem;
+  }
+  .calc-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Medium Tablets & Large Phones (<= 992px) */
 @media (max-width: 992px) {
   .catalog-filter-bar {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
   .filter-group.search-group {
     grid-column: span 2;
   }
-  .calc-grid-layout {
+  .inquiry-grid {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 }
 
-@media (max-width: 600px) {
+/* Smart Mobile Phones (<= 768px) */
+@media (max-width: 768px) {
+  /* Prevent iOS Safari input auto-zoom by ensuring minimum 16px font */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .container {
+    padding: 0 1.15rem;
+  }
+
+  .site-header {
+    padding: 0.65rem 0;
+  }
+
+  .section-title {
+    font-size: 1.85rem !important;
+    line-height: 1.25;
+  }
+
+  /* Compact Navbar Actions */
+  .btn-nav-inquire {
+    padding: 8px 13px;
+    font-size: 0.74rem;
+  }
+
+  .btn-nav-user-circle {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Financial Calculator Mobile Bottom Sheet / Modal */
+  .calc-modal-backdrop {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .calc-modal-dialog {
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 18px 18px 0 0;
+    margin: 0;
+  }
+
+  .calc-modal-header {
+    padding: 1rem 1.15rem;
+  }
+
+  .calc-modal-body {
+    padding: 1.25rem 1rem;
+  }
+
+  .calc-hero-gauge .gauge-amount {
+    font-size: 2.1rem;
+  }
+
+  .calc-term-pills {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .calc-cta-stack {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-calc-messenger,
+  .btn-calc-showroom {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 0.76rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Showroom Inquiry Card */
+  .inquiry-wrapper {
+    padding: 1.5rem 1rem;
+  }
+
+  .inquiry-form-card {
+    padding: 1.35rem 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .benefit-item {
+    gap: 12px;
+  }
+
+  .benefit-text h4 {
+    font-size: 0.95rem;
+  }
+
+  .benefit-text p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Compact Mobile Devices (<= 640px) */
+@media (max-width: 640px) {
+  /* Casino 3D Carousel Stage */
+  .casino-stage-container {
+    height: 320px;
+  }
+
+  .casino-car-item {
+    width: min(92vw, 360px);
+  }
+
+  .casino-floating-tag {
+    bottom: -6px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+  }
+
+  .casino-nav-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .casino-nav-btn span.nav-text {
+    display: none;
+  }
+
+  .casino-nav-btn.roll-left {
+    left: 8px;
+  }
+
+  .casino-nav-btn.roll-right {
+    right: 8px;
+  }
+
+  .casino-indicators {
+    bottom: -8px;
+  }
+
+  /* Active Cockpit HUD */
+  .casino-active-hud {
+    padding: 1.15rem 0.9rem;
+    margin: 0 auto 3rem;
+    border-radius: 16px;
+  }
+
+  .hud-top-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 0.65rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .hud-badge-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .hud-rec-badge,
+  .hud-status-badge,
+  .hud-price-badge {
+    font-size: 0.66rem;
+    padding: 3px 8px;
+  }
+
+  .hud-car-title {
+    font-size: 1.15rem;
+  }
+
+  .hud-wheel-title {
+    font-size: 0.75rem;
+  }
+
+  .hud-specs-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .hud-spec-item:nth-child(5) {
+    grid-column: span 2;
+  }
+
+  /* Inventory Catalog Filters & Cards */
   .catalog-filter-bar {
     grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 1rem;
   }
+
   .filter-group.search-group {
     grid-column: span 1;
   }
-  .card-actions-bar {
+
+  .filter-count-badge {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+  }
+
+  .inventory-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .inventory-car-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .card-image-stage {
+    height: 175px;
+  }
+
+  .card-car-name {
+    font-size: 1.15rem;
+  }
+
+  .card-specs-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .pill-selector {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pill-option {
+    font-size: 0.72rem;
+    padding: 7px 12px;
+  }
+
+  /* Footer on Mobile */
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .footer-bottom {
     flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    align-items: center;
+  }
+}
+
+/* Extra Small Phones (<= 390px, e.g. iPhone SE) */
+@media (max-width: 390px) {
+  .brand-subtitle {
+    display: none;
+  }
+
+  .brand-logo-text {
+    font-size: 1.1rem;
+  }
+
+  .btn-nav-inquire {
+    padding: 6px 9px;
+    font-size: 0.7rem;
+  }
+
+  .casino-stage-container {
+    height: 290px;
+  }
+
+  .calc-term-pills {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

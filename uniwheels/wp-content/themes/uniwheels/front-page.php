@@ -129,7 +129,7 @@ if (empty($catalog_brands)) {
           SHOWROOM <span>FLEET</span>
         </h1>
         <p class="section-subtitle">
-          Spin and roll through our handpicked recommended builds. The active vehicle rotates closer to your screen with complete technical telemetry.
+          Spin and roll through our handpicked recommended builds.
         </p>
       </div>
 
@@ -187,10 +187,8 @@ if (empty($catalog_brands)) {
         <!-- Left & Right Roll Casino Controls -->
         <button type="button" class="casino-nav-btn roll-left" id="casinoRollLeft" aria-label="Roll Left">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span class="nav-text">ROLL LEFT</span>
         </button>
         <button type="button" class="casino-nav-btn roll-right" id="casinoRollRight" aria-label="Roll Right">
-          <span class="nav-text">ROLL RIGHT</span>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
 
@@ -199,12 +197,27 @@ if (empty($catalog_brands)) {
 
       </div>
 
+      <?php
+        $first_hero = !empty($hero_cars) ? $hero_cars[0] : null;
+        $init_price = $first_hero && !empty($first_hero['price']) ? floatval($first_hero['price']) : 0;
+        $init_price_str = $init_price > 0 ? ('₱' . number_format($init_price, 0)) : '₱ Bespoke';
+        $init_name = $first_hero ? $first_hero['name'] : 'Luxury Vehicle';
+        $init_wheel = $first_hero ? $first_hero['wheel_name'] : '';
+        $init_stock = $first_hero ? ($first_hero['stock_id'] ?: ('UW-' . $first_hero['id'])) : 'UW-01';
+        $init_front = $first_hero ? ($first_hero['front_fitment'] ?: '-') : '-';
+        $init_rear = $first_hero ? ($first_hero['rear_fitment'] ?: '-') : '-';
+        $init_finish = $first_hero ? ($first_hero['finish'] ?: '-') : '-';
+        $init_alloy = $first_hero ? ($first_hero['alloy_type'] ?: '-') : '-';
+        $init_weight = $first_hero ? ($first_hero['weight'] ?: '-') : '-';
+        $init_status = $first_hero ? ($first_hero['status'] ?: 'AVAILABLE') : 'AVAILABLE';
+      ?>
       <!-- Active Front Vehicle Cockpit HUD -->
       <div class="casino-active-hud" id="casinoActiveHud">
         <div class="hud-top-bar">
           <div class="hud-badge-group">
-            <span class="hud-rec-badge">★ RECOMMENDED SHOWCASE</span>
-            <span class="hud-status-badge" id="hudStatusBadge">● AVAILABLE</span>
+            <span class="hud-rec-badge">★ RECOMMENDED</span>
+            <span class="hud-status-badge" id="hudStatusBadge">● <?php echo esc_html(strtoupper($init_status)); ?></span>
+            <span class="hud-price-badge" id="hudPriceBadge"><?php echo esc_html($init_price_str); ?></span>
           </div>
           <div class="hud-index-tracker" id="hudIndexTracker">
             <span id="hudCurrentNum">01</span> / <span id="hudTotalNum"><?php echo str_pad(count($hero_cars), 2, '0', STR_PAD_LEFT); ?></span>
@@ -213,48 +226,53 @@ if (empty($catalog_brands)) {
 
         <div class="hud-main-content">
           <div class="hud-title-col">
-            <h2 class="hud-car-title" id="hudCarTitle">--</h2>
-            <div class="hud-wheel-title" id="hudWheelTitle">--</div>
+            <h2 class="hud-car-title" id="hudCarTitle"><?php echo esc_html($init_name); ?></h2>
+            <div class="hud-wheel-title" id="hudWheelTitle"><?php echo esc_html($init_wheel); ?></div>
+            <div class="hud-stock-sub" id="hudStockSub">STOCK #<?php echo esc_html(strtoupper($init_stock)); ?></div>
           </div>
 
           <div class="hud-specs-grid">
             <div class="hud-spec-item">
               <span class="hud-k">Front Fitment</span>
-              <span class="hud-v" id="hudFront">--</span>
+              <span class="hud-v" id="hudFront"><?php echo esc_html($init_front); ?></span>
             </div>
             <div class="hud-spec-item">
               <span class="hud-k">Rear Fitment</span>
-              <span class="hud-v" id="hudRear">--</span>
+              <span class="hud-v" id="hudRear"><?php echo esc_html($init_rear); ?></span>
             </div>
             <div class="hud-spec-item">
               <span class="hud-k">Wheel Finish</span>
-              <span class="hud-v" id="hudFinish">--</span>
+              <span class="hud-v" id="hudFinish"><?php echo esc_html($init_finish); ?></span>
             </div>
             <div class="hud-spec-item">
               <span class="hud-k">Alloy / Construction</span>
-              <span class="hud-v" id="hudAlloy">--</span>
+              <span class="hud-v" id="hudAlloy"><?php echo esc_html($init_alloy); ?></span>
             </div>
             <div class="hud-spec-item">
               <span class="hud-k">Wheel Weight</span>
-              <span class="hud-v" id="hudWeight">--</span>
+              <span class="hud-v" id="hudWeight"><?php echo esc_html($init_weight); ?></span>
             </div>
           </div>
+        </div>
 
-          <div class="hud-action-col">
-            <button type="button" class="btn-hud-messenger" id="hudMessengerBtn" title="Inquire via Messenger with pre-filled vehicle ID and details">
-              <svg viewBox="0 0 28 28" width="18" height="18" fill="currentColor">
-                <path d="M14 2C7.373 2 2 6.945 2 13.045c0 3.477 1.745 6.577 4.473 8.577V26l4.24-2.327c1.045.291 2.155.455 3.287.455 6.627 0 12-4.945 12-11.045S20.627 2 14 2zm1.2 14.882l-3.073-3.282-6 3.282 6.6-7.009 3.145 3.282 5.928-3.282-6.6 7.009z"/>
-              </svg>
-              <span>Inquire via Messenger</span>
-            </button>
-            <button type="button" class="btn-hud-finance" id="hudFinanceBtn" title="Calculate rough estimates for down payments & monthly amortizations">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
-              <span>Finance Calculator</span>
-            </button>
-            <button type="button" class="btn-hud-inquire" id="hudInquireBtn">
-              <span>Showroom Consultation</span>
-            </button>
-          </div>
+        <!-- Spacious Full-Width Cockpit Action Bar (3 Spacious Luxury Buttons) -->
+        <div class="hud-actions-bar">
+          <button type="button" class="btn-hud-messenger" id="hudMessengerBtn" title="Inquire via Messenger with pre-filled vehicle ID and details">
+            <svg viewBox="0 0 28 28" width="18" height="18" fill="currentColor">
+              <path d="M14 2C7.373 2 2 6.945 2 13.045c0 3.477 1.745 6.577 4.473 8.577V26l4.24-2.327c1.045.291 2.155.455 3.287.455 6.627 0 12-4.945 12-11.045S20.627 2 14 2zm1.2 14.882l-3.073-3.282-6 3.282 6.6-7.009 3.145 3.282 5.928-3.282-6.6 7.009z"/>
+            </svg>
+            <span>Inquire via Messenger</span>
+          </button>
+          
+          <button type="button" class="btn-hud-finance" id="hudFinanceBtn" title="Calculate rough estimates for down payments & monthly amortizations">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+            <span>Finance Calculator</span>
+          </button>
+
+          <button type="button" class="btn-hud-inquire" id="hudInquireBtn" title="Schedule Showroom Viewing">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>Showroom Consultation</span>
+          </button>
         </div>
       </div>
 
@@ -263,18 +281,11 @@ if (empty($catalog_brands)) {
            ======================================================== -->
       <div id="inventoryCatalogSection" class="catalog-section-wrapper">
         <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
-          <div class="section-pill-tag">
-            <span class="section-pill-dot"></span>
-            Real-Time Digital Inventory Catalog
-          </div>
           <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
             <div>
               <h2 class="section-title" style="margin: 0; font-size:2.2rem;">
-                SEARCH & FILTER <span>VEHICLE FLEET</span>
+                VEHICLE <span>FLEET</span>
               </h2>
-              <p class="section-subtitle" style="margin: 0.5rem 0 0 0; max-width: 620px;">
-                Browse our verified showroom acquisitions. Filter dynamically by brand marque, price budget, transmission, or body configuration.
-              </p>
             </div>
             <div id="filterResultCount" class="filter-count-badge">
               Showing <?php echo count($catalog_cars); ?> Luxury Units
@@ -309,10 +320,10 @@ if (empty($catalog_brands)) {
             <label class="filter-label" for="filterBudget">Budget / Price</label>
             <select id="filterBudget" class="catalog-filter-select">
               <option value="all">All Price Ranges</option>
-              <option value="under-150k">Under $150,000</option>
-              <option value="150k-300k">$150,000 – $300,000</option>
-              <option value="300k-600k">$300,000 – $600,000</option>
-              <option value="over-600k">$600,000+ (Ultra-Exotics)</option>
+              <option value="under-150k">Under ₱150,000</option>
+              <option value="150k-300k">₱150,000 – ₱300,000</option>
+              <option value="300k-600k">₱300,000 – ₱600,000</option>
+              <option value="over-600k">₱600,000+ (Ultra-Exotics)</option>
             </select>
           </div>
 
@@ -382,9 +393,9 @@ if (empty($catalog_brands)) {
                   <span class="status-badge <?php echo esc_attr(strtolower(str_replace(' ', '-', $car['status']))); ?>">● <?php echo esc_html($car['status']); ?></span>
                 </div>
                 <div class="price-box">
-                  <div class="car-price-main">$<?php echo number_format($c_price, 0); ?></div>
+                  <div class="car-price-main">₱<?php echo number_format($c_price, 0); ?></div>
                   <div class="car-amortization-tag" onclick='openFinancialCalculator(<?php echo json_encode($car); ?>)' title="Click to view rough monthly amortization estimate">
-                    Est. $<?php echo number_format($c_est_monthly, 0); ?>/mo ⓘ
+                    Est. ₱<?php echo number_format($c_est_monthly, 0); ?>/mo ⓘ
                   </div>
                 </div>
               </div>
@@ -432,16 +443,19 @@ if (empty($catalog_brands)) {
                   <span>Inquire via Messenger</span>
                 </button>
 
-                <!-- Financial Calculator Modal Trigger (Feature #5) -->
-                <button type="button" class="btn-card-calc" onclick='openFinancialCalculator(<?php echo json_encode($car); ?>)' title="Calculate down payments and monthly amortizations">
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
-                  <span>Finance Calc</span>
-                </button>
+                <div class="card-actions-sub-row">
+                  <!-- Financial Calculator Modal Trigger (Feature #5) -->
+                  <button type="button" class="btn-card-calc" onclick='openFinancialCalculator(<?php echo json_encode($car); ?>)' title="Calculate down payments and monthly amortizations">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+                    <span>Finance Calc</span>
+                  </button>
 
-                <!-- Face-to-Face Showroom Consultation Anchor -->
-                <a href="#inquirySection" class="btn-card-inquire" onclick="selectCarForConsultation('<?php echo esc_js($car['name']); ?>')" title="Schedule Private In-Person Showroom Viewing">
-                  <span>Showroom Talk</span>
-                </a>
+                  <!-- Face-to-Face Showroom Consultation Anchor -->
+                  <a href="#inquirySection" class="btn-card-inquire" onclick="selectCarForConsultation('<?php echo esc_js($car['name']); ?>')" title="Schedule Private In-Person Showroom Viewing">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Showroom Talk</span>
+                  </a>
+                </div>
               </div>
 
             </div>
@@ -482,9 +496,9 @@ if (empty($catalog_brands)) {
               <!-- Left: Inputs -->
               <div class="calc-inputs-pane">
                 <div class="calc-field-group">
-                  <label class="calc-label" for="calcVehiclePrice">Vehicle Acquisition Price ($ USD)</label>
+                  <label class="calc-label" for="calcVehiclePrice">Vehicle Acquisition Price (₱ PHP)</label>
                   <div class="calc-input-wrap">
-                    <span class="calc-currency-prefix">$</span>
+                    <span class="calc-currency-prefix">₱</span>
                     <input type="number" id="calcVehiclePrice" class="calc-num-input" value="550000" step="5000" oninput="runFinancialCalculation()">
                   </div>
                 </div>
@@ -496,7 +510,7 @@ if (empty($catalog_brands)) {
                     <div class="calc-dp-stats">
                       <span id="calcDpPercentDisplay" style="color:var(--wheels-neon); font-family:var(--font-mono); font-weight:800;">20%</span>
                       <span style="color:var(--text-muted); margin:0 4px;">•</span>
-                      <span id="calcDpAmountDisplay" style="color:#fff; font-family:var(--font-mono); font-weight:700;">$110,000</span>
+                      <span id="calcDpAmountDisplay" style="color:#fff; font-family:var(--font-mono); font-weight:700;">₱110,000</span>
                     </div>
                   </div>
                   <input type="range" id="calcDpSlider" class="calc-slider" min="10" max="70" step="5" value="20" oninput="handleDownPaymentSlider(this.value)">
@@ -534,26 +548,26 @@ if (empty($catalog_brands)) {
               <div class="calc-results-pane">
                 <div class="calc-hero-gauge">
                   <div class="gauge-label">ESTIMATED MONTHLY AMORTIZATION</div>
-                  <div class="gauge-amount" id="gaugeMonthlyDisplay">$8,496</div>
+                  <div class="gauge-amount" id="gaugeMonthlyDisplay">₱8,486</div>
                   <div class="gauge-terms" id="gaugeTermsSub">Per month for 60 months @ 5.9% APR</div>
                 </div>
 
                 <div class="calc-breakdown-table">
                   <div class="breakdown-row">
                     <span>Down Payment Required:</span>
-                    <strong id="gaugeDownPayment">$110,000</strong>
+                    <strong id="gaugeDownPayment">₱110,000</strong>
                   </div>
                   <div class="breakdown-row">
                     <span>Principal Financed:</span>
-                    <strong id="gaugeFinancedPrincipal">$440,000</strong>
+                    <strong id="gaugeFinancedPrincipal">₱440,000</strong>
                   </div>
                   <div class="breakdown-row">
                     <span>Total Loan Interest:</span>
-                    <strong id="gaugeTotalInterest">$69,760</strong>
+                    <strong id="gaugeTotalInterest">₱69,160</strong>
                   </div>
                   <div class="breakdown-row total-row">
                     <span>Total Amortized Cost:</span>
-                    <strong id="gaugeTotalCost">$619,760</strong>
+                    <strong id="gaugeTotalCost">₱609,160</strong>
                   </div>
                 </div>
 

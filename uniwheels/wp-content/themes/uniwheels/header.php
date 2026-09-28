@@ -34,7 +34,7 @@
       <!-- Luxury Dealership Navigation Links -->
       <nav class="site-nav" aria-label="<?php esc_attr_e( 'Main Navigation', 'uniwheels' ); ?>">
         <a href="<?php echo esc_url( home_url( '/#showcase' ) ); ?>" class="nav-link">3D Showroom</a>
-        <a href="<?php echo esc_url( home_url( '/#inventoryCatalogSection' ) ); ?>" class="nav-link">Inventory & Filters</a>
+        <a href="<?php echo esc_url( home_url( '/#inventoryCatalogSection' ) ); ?>" class="nav-link">Inventory</a>
         <a href="<?php echo esc_url( home_url( '/#inquirySection' ) ); ?>" class="nav-link">Inquiries</a>
         <a href="<?php echo esc_url( get_permalink( 14 ) ); ?>" class="nav-link">About</a>
       </nav>

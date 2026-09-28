@@ -308,6 +308,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (elAlloy) elAlloy.textContent = d.alloy || '-';
       if (elWeight) elWeight.textContent = d.weight || '-';
 
+      const elPrice = document.getElementById('hudPriceBadge');
+      const elStock = document.getElementById('hudStockSub');
+      if (elPrice) {
+        const pNum = parseFloat(d.price) || 0;
+        elPrice.textContent = pNum > 0 ? `₱${pNum.toLocaleString('en-US')}` : '₱ Valuation';
+      }
+      if (elStock) {
+        elStock.textContent = `STOCK #${(d.stock || ('UW-' + d.id)).toUpperCase()}`;
+      }
+
       const inqBtn = document.getElementById('hudInquireBtn');
       if (inqBtn) {
         inqBtn.onclick = () => {
@@ -590,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!car) return;
     const stockId = car.stock_id || ('UW-' + (car.id || 'FLEET'));
     const carName = car.name || 'Verified Showroom Vehicle';
-    const priceFormatted = car.price ? `$${Number(car.price).toLocaleString('en-US')}` : 'Bespoke Valuation';
+    const priceFormatted = car.price ? `₱${Number(car.price).toLocaleString('en-US')}` : 'Bespoke Valuation';
     const mileage = car.mileage || 'Delivery Miles';
     const trans = car.transmission || 'Dual-Clutch DCT';
 
@@ -699,13 +709,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const elGaugeInterest = document.getElementById('gaugeTotalInterest');
     const elGaugeCost = document.getElementById('gaugeTotalCost');
 
-    if (elMonthly) elMonthly.textContent = '$' + monthlyPayment.toLocaleString('en-US');
+    if (elMonthly) elMonthly.textContent = '₱' + monthlyPayment.toLocaleString('en-US');
     if (elTermsSub) elTermsSub.textContent = `Per month for ${months} months @ ${apr}% APR`;
-    if (elDpAmount) elDpAmount.textContent = '$' + dpAmount.toLocaleString('en-US');
-    if (elGaugeDp) elGaugeDp.textContent = '$' + dpAmount.toLocaleString('en-US');
-    if (elGaugePrincipal) elGaugePrincipal.textContent = '$' + principal.toLocaleString('en-US');
-    if (elGaugeInterest) elGaugeInterest.textContent = '$' + totalInterest.toLocaleString('en-US');
-    if (elGaugeCost) elGaugeCost.textContent = '$' + totalCost.toLocaleString('en-US');
+    if (elDpAmount) elDpAmount.textContent = '₱' + dpAmount.toLocaleString('en-US');
+    if (elGaugeDp) elGaugeDp.textContent = '₱' + dpAmount.toLocaleString('en-US');
+    if (elGaugePrincipal) elGaugePrincipal.textContent = '₱' + principal.toLocaleString('en-US');
+    if (elGaugeInterest) elGaugeInterest.textContent = '₱' + totalInterest.toLocaleString('en-US');
+    if (elGaugeCost) elGaugeCost.textContent = '₱' + totalCost.toLocaleString('en-US');
   };
 
   window.inquireMessengerWithFinancing = function() {
@@ -720,9 +730,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const dpAmount = Math.round(price * (dpPct / 100));
 
     const elMonthly = document.getElementById('gaugeMonthlyDisplay');
-    const monthlyStr = elMonthly ? elMonthly.textContent : '$0';
+    const monthlyStr = elMonthly ? elMonthly.textContent : '₱0';
 
-    const msg = `Hello UniWheels Dealership! 🏎️\n\nI would like to inquire about financing for:\n• Vehicle: ${carName} (Stock #${stockId})\n• Vehicle Price: $${Number(price).toLocaleString('en-US')}\n• Proposed Down Payment: $${Number(dpAmount).toLocaleString('en-US')} (${dpPct}%)\n• Term: ${currentCalcTerm} Months\n• Estimated Payment: ~${monthlyStr}/month\n\nCan your financing desk arrange an on-site viewing and review these terms with me?`;
+    const msg = `Hello UniWheels Dealership! 🏎️\n\nI would like to inquire about financing for:\n• Vehicle: ${carName} (Stock #${stockId})\n• Vehicle Price: ₱${Number(price).toLocaleString('en-US')}\n• Proposed Down Payment: ₱${Number(dpAmount).toLocaleString('en-US')} (${dpPct}%)\n• Term: ${currentCalcTerm} Months\n• Estimated Payment: ~${monthlyStr}/month\n\nCan your financing desk arrange an on-site viewing and review these terms with me?`;
 
     const messengerUrl = `https://m.me/uniwheels?text=` + encodeURIComponent(msg);
     window.open(messengerUrl, '_blank');
@@ -744,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthly = elMonthly ? elMonthly.textContent : '';
 
     if (msgBox) {
-      msgBox.value = `Financing Discussion Requested:\nEstimated Acquisition Price: $${price}\nDown Payment: ${dpPct}%\nAmortization Term: ${currentCalcTerm} Months (${monthly}/month)\n\nLooking to schedule an in-person showroom visit to inspect the vehicle and finalize acquisition terms.`;
+      msgBox.value = `Financing Discussion Requested:\nEstimated Acquisition Price: ₱${price}\nDown Payment: ${dpPct}%\nAmortization Term: ${currentCalcTerm} Months (${monthly}/month)\n\nLooking to schedule an in-person showroom visit to inspect the vehicle and finalize acquisition terms.`;
       msgBox.focus();
     }
   };

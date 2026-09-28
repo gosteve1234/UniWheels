@@ -39,10 +39,15 @@ function uniwheels_enqueue_scripts() {
     // Google Fonts: Inter and Outfit
     wp_enqueue_style( 'uniwheels-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&display=swap', array(), null );
 
-    // Main Theme Stylesheet
-    wp_enqueue_style( 'uniwheels-style', get_template_directory_uri() . '/assets/css/style.css', array(), '1.0.0' );
+    $style_path = get_template_directory() . '/assets/css/style.css';
+    $script_path = get_template_directory() . '/assets/js/main.js';
+    $style_ver = file_exists( $style_path ) ? filemtime( $style_path ) : time();
+    $script_ver = file_exists( $script_path ) ? filemtime( $script_path ) : time();
 
-    // Interactive Frontend Script
-    wp_enqueue_script( 'uniwheels-script', get_template_directory_uri() . '/assets/js/main.js', array(), '1.0.0', true );
+    // Main Theme Stylesheet (Cache-busted)
+    wp_enqueue_style( 'uniwheels-style', get_template_directory_uri() . '/assets/css/style.css', array(), $style_ver );
+
+    // Interactive Frontend Script (Cache-busted)
+    wp_enqueue_script( 'uniwheels-script', get_template_directory_uri() . '/assets/js/main.js', array(), $script_ver, true );
 }
 add_action( 'wp_enqueue_scripts', 'uniwheels_enqueue_scripts' );
