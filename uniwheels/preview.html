@@ -14,6 +14,20 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+  <!-- Immediate Theme Initializer (Prevents Theme Flash / FOUC) -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('uniwheels_theme');
+        if (savedTheme === 'light' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -29,7 +43,7 @@
             <div class="brand-logo-text">
               <span class="brand-uni">UNI</span><span class="brand-wheels">WHEELS</span>
             </div>
-            <span class="brand-subtitle">FORGED & PERFORMANCE</span>
+            <span class="brand-subtitle">DRIVE YOUR DREAMS</span>
           </div>
         </a>
 
@@ -41,15 +55,31 @@
           <a href="#about" class="nav-link">About</a>
         </nav>
 
-        <!-- Sleek Dealership Action CTAs (Inquire + Circular User Account) -->
+        <!-- Sleek Dealership Action CTAs (Inquire + Light/Dark Mode Toggle) -->
         <div class="nav-actions">
           <a href="#inquirySection" class="btn-nav-inquire">Inquire Vehicle</a>
-          <button type="button" class="btn-nav-user-circle" id="userAuthBtn" title="Customer Account" aria-label="Customer Account">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span class="user-active-badge" id="userActiveBadge" style="display:none;"></span>
+          <button type="button" class="btn-theme-toggle" id="themeToggleBtn" aria-label="Toggle Light and Dark Mode" title="Toggle Light/Dark Theme" role="switch" aria-checked="false">
+            <span class="theme-toggle-track">
+              <span class="theme-toggle-icon theme-icon-sun" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              </span>
+              <span class="theme-toggle-icon theme-icon-moon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </span>
+              <span class="theme-toggle-thumb" aria-hidden="true"></span>
+            </span>
           </button>
         </div>
 
@@ -242,56 +272,6 @@
           <!-- Carousel Indicators / Dot Ticks -->
           <div class="casino-indicators" id="casinoIndicators"></div>
 
-        </div>
-
-        <!-- Active Front Vehicle Cockpit HUD -->
-        <div class="casino-active-hud" id="casinoActiveHud">
-          <div class="hud-top-bar">
-            <div class="hud-badge-group">
-              <span class="hud-rec-badge">★ RECOMMENDED SHOWCASE</span>
-              <span class="hud-status-badge" id="hudStatusBadge">● AVAILABLE</span>
-            </div>
-            <div class="hud-index-tracker" id="hudIndexTracker">
-              <span id="hudCurrentNum">01</span> / <span id="hudTotalNum">06</span>
-            </div>
-          </div>
-
-          <div class="hud-main-content">
-            <div class="hud-title-col">
-              <h2 class="hud-car-title" id="hudCarTitle">Ferrari SF90 Stradale Crimson Edition</h2>
-              <div class="hud-wheel-title" id="hudWheelTitle">UW-F01 Monoblock Forged</div>
-            </div>
-
-            <div class="hud-specs-grid">
-              <div class="hud-spec-item">
-                <span class="hud-k">Front Fitment</span>
-                <span class="hud-v" id="hudFront">21" x 9.5J ET28</span>
-              </div>
-              <div class="hud-spec-item">
-                <span class="hud-k">Rear Fitment</span>
-                <span class="hud-v" id="hudRear">22" x 12.5J ET38</span>
-              </div>
-              <div class="hud-spec-item">
-                <span class="hud-k">Wheel Finish</span>
-                <span class="hud-v" id="hudFinish">Candy Dark Red</span>
-              </div>
-              <div class="hud-spec-item">
-                <span class="hud-k">Alloy / Construction</span>
-                <span class="hud-v" id="hudAlloy">6061-T6 Aerospace</span>
-              </div>
-              <div class="hud-spec-item">
-                <span class="hud-k">Wheel Weight</span>
-                <span class="hud-v" id="hudWeight">9.8 kg / wheel</span>
-              </div>
-            </div>
-
-            <div class="hud-action-col">
-              <button type="button" class="btn-hud-inquire" id="hudInquireBtn">
-                <span>Inquire This Vehicle</span>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Interactive Inquiry Section ("Inquire us" Form) -->
@@ -490,293 +470,6 @@
     </div>
   </div>
 
-  <!-- Customer Login & Sign Up Modal (Operating on `users` table) -->
-  <div id="customerAuthModal" class="customer-modal-backdrop" role="dialog" aria-modal="true">
-    <div class="customer-modal-dialog">
-      <div class="customer-modal-header">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <img src="assets/images/logo.png" alt="UniWheels" style="height:28px; width:auto; filter:drop-shadow(0 0 8px rgba(196,21,46,0.6));">
-          <div class="customer-modal-title">
-            <span style="color:#fff;">CUSTOMER</span> <span style="color:var(--wheels-crimson);">ACCESS</span>
-          </div>
-        </div>
-        <button type="button" class="customer-modal-close" id="customerModalClose" aria-label="Close modal">&times;</button>
-      </div>
-
-      <!-- Auth State 1: Guest (Sign In / Register) -->
-      <div id="authGuestView">
-        <div class="auth-tabs">
-          <button type="button" class="auth-tab-btn active" id="tabBtnLogin" onclick="switchCustomerAuthTab('login')">Sign In</button>
-          <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchCustomerAuthTab('register')">Create Account</button>
-        </div>
-
-        <div class="customer-modal-body">
-          <div id="authFeedback" class="auth-feedback-box"></div>
-
-          <!-- Sign In Form -->
-          <form id="customerLoginForm" onsubmit="handleCustomerLogin(event)">
-            <div class="auth-form-group">
-              <label class="auth-label" for="loginIdentifier">Username or Email</label>
-              <input type="text" id="loginIdentifier" class="auth-input" placeholder="e.g. jferrari or julian@example.com" required>
-            </div>
-            <div class="auth-form-group">
-              <label class="auth-label" for="loginPassword">Password</label>
-              <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn-auth-submit" id="loginSubmitBtn">Sign In to UniWheels &rarr;</button>
-            <div style="text-align:center; margin-top:14px; font-size:0.78rem; color:var(--text-sub);">
-              Don't have an account? <a href="javascript:void(0)" onclick="switchCustomerAuthTab('register')" style="color:var(--wheels-neon); font-weight:600; text-decoration:underline;">Create one now</a>
-            </div>
-          </form>
-
-          <!-- Register Form -->
-          <form id="customerRegisterForm" style="display:none;" onsubmit="handleCustomerRegister(event)">
-            <div class="auth-form-group">
-              <label class="auth-label" for="regFullName">Full Name</label>
-              <input type="text" id="regFullName" class="auth-input" placeholder="e.g. Julian Ferrari" required>
-            </div>
-            <div class="auth-form-group">
-              <label class="auth-label" for="regUsername">Username</label>
-              <input type="text" id="regUsername" class="auth-input" placeholder="e.g. jferrari" required>
-            </div>
-            <div class="auth-form-group">
-              <label class="auth-label" for="regEmail">Email Address</label>
-              <input type="email" id="regEmail" class="auth-input" placeholder="e.g. julian@example.com" required>
-            </div>
-            <div class="auth-form-group">
-              <label class="auth-label" for="regPassword">Password (6+ characters)</label>
-              <input type="password" id="regPassword" class="auth-input" placeholder="••••••••" minlength="6" required>
-            </div>
-            <button type="submit" class="btn-auth-submit" id="regSubmitBtn">Create Customer Account &rarr;</button>
-            <div style="text-align:center; margin-top:14px; font-size:0.78rem; color:var(--text-sub);">
-              Already have an account? <a href="javascript:void(0)" onclick="switchCustomerAuthTab('login')" style="color:var(--wheels-neon); font-weight:600; text-decoration:underline;">Sign in here</a>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Auth State 2: Logged-in Customer View -->
-      <div id="authCustomerView" style="display:none;" class="customer-modal-body">
-        <div class="customer-profile-view">
-          <div class="customer-profile-avatar-big">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-          <div class="customer-profile-name" id="custProfileName">Customer</div>
-          <div class="customer-profile-email" id="custProfileEmail">customer@example.com</div>
-          <div class="customer-profile-badge">● Verified Client</div>
-
-          <div style="display:flex; flex-direction:column; gap:8px; margin-top:1rem;">
-            <a href="#showcase" class="btn-nav-inquire" style="text-align:center; justify-content:center;" onclick="closeCustomerModal()">Explore Featured Builds</a>
-            <button type="button" class="btn-side-specs" style="width:100%;" onclick="handleCustomerLogout()">Sign Out</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <script>
-  // Customer Authentication Controller for preview.html
-  (function() {
-    const authBtn = document.getElementById('userAuthBtn');
-    const authModal = document.getElementById('customerAuthModal');
-    const closeBtn = document.getElementById('customerModalClose');
-    const userBtnText = document.getElementById('userBtnText');
-    const authGuestView = document.getElementById('authGuestView');
-    const authCustomerView = document.getElementById('authCustomerView');
-    const feedbackBox = document.getElementById('authFeedback');
-    const custName = document.getElementById('custProfileName');
-    const custEmail = document.getElementById('custProfileEmail');
-
-    const authEndpoint = 'customer-auth.php';
-
-    function checkSession() {
-      fetch(authEndpoint + '?action=check')
-        .then(res => res.json())
-        .then(data => {
-          if (data.logged_in && data.user) {
-            setLoggedInState(data.user);
-          } else {
-            setLoggedOutState();
-          }
-        })
-        .catch(() => setLoggedOutState());
-    }
-
-    function setLoggedInState(user) {
-      if (authBtn) {
-        authBtn.classList.add('logged-in');
-        authBtn.title = "Account: " + (user.name || 'Client');
-      }
-      const badge = document.getElementById('userActiveBadge');
-      if (badge) badge.style.display = 'block';
-      if (authGuestView) authGuestView.style.display = 'none';
-      if (authCustomerView) authCustomerView.style.display = 'block';
-      if (custName) custName.textContent = user.name;
-      if (custEmail) custEmail.textContent = user.email;
-    }
-
-    function setLoggedOutState() {
-      if (authBtn) {
-        authBtn.classList.remove('logged-in');
-        authBtn.title = "Customer Account";
-      }
-      const badge = document.getElementById('userActiveBadge');
-      if (badge) badge.style.display = 'none';
-      if (authGuestView) authGuestView.style.display = 'block';
-      if (authCustomerView) authCustomerView.style.display = 'none';
-    }
-
-    if (authBtn && authModal) {
-      authBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        authModal.classList.add('active');
-      });
-    }
-
-    if (closeBtn && authModal) {
-      closeBtn.addEventListener('click', () => {
-        authModal.classList.remove('active');
-      });
-    }
-
-    if (authModal) {
-      authModal.addEventListener('click', (e) => {
-        if (e.target === authModal) authModal.classList.remove('active');
-      });
-    }
-
-    window.closeCustomerModal = function() {
-      if (authModal) authModal.classList.remove('active');
-    };
-
-    window.switchCustomerAuthTab = function(tab) {
-      const tabLogin = document.getElementById('tabBtnLogin');
-      const tabReg = document.getElementById('tabBtnRegister');
-      const formLogin = document.getElementById('customerLoginForm');
-      const formReg = document.getElementById('customerRegisterForm');
-      if (feedbackBox) {
-        feedbackBox.className = 'auth-feedback-box';
-        feedbackBox.textContent = '';
-        feedbackBox.style.display = 'none';
-      }
-
-      if (tab === 'login') {
-        tabLogin.classList.add('active');
-        tabReg.classList.remove('active');
-        formLogin.style.display = 'block';
-        formReg.style.display = 'none';
-      } else {
-        tabReg.classList.add('active');
-        tabLogin.classList.remove('active');
-        formReg.style.display = 'block';
-        formLogin.style.display = 'none';
-      }
-    };
-
-    window.handleCustomerLogin = function(e) {
-      e.preventDefault();
-      const identifier = document.getElementById('loginIdentifier').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      const submitBtn = document.getElementById('loginSubmitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Signing in...';
-
-      fetch(authEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', identifier, password })
-      })
-      .then(r => r.json())
-      .then(data => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign In to UniWheels →';
-        if (data.success) {
-          showFeedback(data.message, 'success');
-          setTimeout(() => {
-            setLoggedInState(data.user);
-            if (authModal) authModal.classList.remove('active');
-          }, 800);
-        } else {
-          showFeedback(data.message, 'error');
-        }
-      })
-      .catch(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign In to UniWheels →';
-        showFeedback('Server connection error. Please try again.', 'error');
-      });
-    };
-
-    window.handleCustomerRegister = function(e) {
-      e.preventDefault();
-      const full_name = document.getElementById('regFullName').value.trim();
-      const username = document.getElementById('regUsername').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value.trim();
-      const submitBtn = document.getElementById('regSubmitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Creating account...';
-
-      fetch(authEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'register', full_name, username, email, password })
-      })
-      .then(r => r.json())
-      .then(data => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Customer Account →';
-        if (data.success) {
-          showFeedback(data.message, 'success');
-          setTimeout(() => {
-            setLoggedInState(data.user);
-            if (authModal) authModal.classList.remove('active');
-          }, 900);
-        } else {
-          showFeedback(data.message, 'error');
-        }
-      })
-      .catch(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Customer Account →';
-        showFeedback('Server connection error. Please try again.', 'error');
-      });
-    };
-
-    window.handleCustomerLogout = function() {
-      fetch(authEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'logout' })
-      })
-      .then(r => r.json())
-      .then(() => {
-        setLoggedOutState();
-        switchCustomerAuthTab('login');
-        if (authModal) authModal.classList.remove('active');
-      })
-      .catch(() => {
-        setLoggedOutState();
-        if (authModal) authModal.classList.remove('active');
-      });
-    };
-
-    function showFeedback(msg, type) {
-      if (feedbackBox) {
-        feedbackBox.className = 'auth-feedback-box ' + type;
-        feedbackBox.textContent = msg;
-        feedbackBox.style.display = 'block';
-      }
-    }
-
-    checkSession();
-  })();
-  </script>
-
   <!-- Notification Toast -->
   <div id="toastNotice" class="toast-notice" role="alert">
     <div style="display: flex; align-items: center; gap: 10px;">
@@ -815,18 +508,6 @@
             <li><a href="#showcase">Multi-Piece Modular</a></li>
             <li><a href="#inquirySection">Inquire Us</a></li>
             <li><a href="#about">Dealership Warranty</a></li>
-          </ul>
-        </div>
-
-        <!-- Finishes -->
-        <div class="footer-col">
-          <h5>Signature Finishes</h5>
-          <ul class="footer-links">
-            <li><a href="#inquirySection">Candy Apple Crimson</a></li>
-            <li><a href="#inquirySection">Anodized Dark Wine Red</a></li>
-            <li><a href="#inquirySection">Satin Obsidian Black</a></li>
-            <li><a href="#inquirySection">Brushed Liquid Smoke</a></li>
-            <li><a href="#inquirySection">Gloss Carbon Fiber Lip</a></li>
           </ul>
         </div>
 

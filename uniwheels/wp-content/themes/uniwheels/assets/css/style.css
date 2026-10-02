@@ -41,6 +41,164 @@
   --transition-panel: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
+/* ==========================================================================
+   LIGHT MODE PALETTE & HCI MODERNIZATION (Requirement 2 & 7)
+   ========================================================================== */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-black: #f8fafc;
+  --bg-deep: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-hud: rgba(255, 255, 255, 0.95);
+  
+  --uni-white: #0f172a;
+  --wheels-dark-red: #991b1b;
+  --wheels-crimson: #c4152e;
+  --wheels-bright-red: #dc2626;
+  --wheels-neon: #e11d48;
+  --wheels-glow: rgba(196, 21, 46, 0.2);
+  --wheels-subtle-glow: rgba(196, 21, 46, 0.08);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-sub: #475569;
+  
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-red: rgba(196, 21, 46, 0.35);
+  --border-red-active: rgba(196, 21, 46, 0.85);
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-black);
+  color: var(--text-primary);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(196, 21, 46, 0.06) 0%, transparent 55%),
+    radial-gradient(circle at 80% 25%, rgba(220, 38, 38, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 20% 65%, rgba(196, 21, 46, 0.03) 0%, transparent 45%);
+}
+
+[data-theme="light"] .site-header {
+  background: rgba(248, 250, 252, 0.88);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .catalog-filter-bar {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .catalog-search-input,
+[data-theme="light"] .catalog-filter-select {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .btn-reset-filters {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .btn-reset-filters:hover {
+  background: rgba(196, 21, 46, 0.08);
+  color: var(--wheels-crimson);
+  border-color: var(--wheels-crimson);
+}
+
+[data-theme="light"] .inventory-car-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .inventory-car-card:hover {
+  border-color: var(--wheels-crimson);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.09), 0 0 25px rgba(196, 21, 46, 0.12);
+}
+
+[data-theme="light"] .card-car-name {
+  color: #0f172a;
+}
+
+[data-theme="light"] .car-price-main {
+  color: #0f172a;
+}
+
+[data-theme="light"] .card-specs-grid {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .spec-value {
+  color: #0f172a;
+}
+
+[data-theme="light"] .btn-card-calc {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+}
+
+[data-theme="light"] .btn-card-calc:hover {
+  background: rgba(196, 21, 46, 0.08);
+  border-color: var(--wheels-crimson);
+  color: var(--wheels-crimson);
+}
+
+[data-theme="light"] .calc-modal-dialog {
+  background: #ffffff;
+  border-color: rgba(196, 21, 46, 0.35);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .calc-modal-header {
+  background: #f8fafc;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .calc-modal-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .calc-num-input {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .calc-results-pane {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .calc-hero-gauge {
+  background: #ffffff;
+  border-color: rgba(196, 21, 46, 0.2);
+}
+
+[data-theme="light"] .gauge-terms {
+  color: #475569;
+}
+
+[data-theme="light"] .breakdown-row {
+  color: #475569;
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .breakdown-row strong {
+  color: #0f172a;
+}
+
+[data-theme="light"] .site-footer {
+  background: #f1f5f9;
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
 /* Reset & Base Styles */
 * {
   box-sizing: border-box;
@@ -1601,316 +1759,143 @@ textarea.form-control {
 }
 
 /* ==========================================================================
-   CUSTOMER ACCOUNT & AUTHENTICATION MODAL (Operating on `users` table)
+   LUXURY AUTOMOTIVE COCKPIT THEME TOGGLE SWITCH
    ========================================================================== */
-
-/* Circular Customer Account Nav Button (No text, pure circular icon) */
-.btn-nav-user-circle {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+.btn-theme-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-sub, #a0a0b2);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
-  position: relative;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-  padding: 0;
-}
-
-.btn-nav-user-circle svg {
-  width: 20px;
-  height: 20px;
-  color: var(--text-sub, #a0a0b2);
-  transition: all 0.25s ease;
-}
-
-.btn-nav-user-circle:hover {
-  background: rgba(196, 21, 46, 0.2);
-  border-color: var(--wheels-neon, #ff2b47);
-  box-shadow: 0 0 20px rgba(196, 21, 46, 0.6);
-  transform: translateY(-1px);
-}
-
-.btn-nav-user-circle:hover svg {
-  color: #fff;
-  transform: scale(1.08);
-}
-
-.btn-nav-user-circle:active {
-  transform: scale(0.95);
-}
-
-.btn-nav-user-circle.logged-in {
-  border-color: #2ed573;
-  background: rgba(46, 213, 115, 0.1);
-  box-shadow: 0 0 16px rgba(46, 213, 115, 0.35);
-}
-
-.btn-nav-user-circle.logged-in svg {
-  color: #2ed573;
-}
-
-.user-active-badge {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #2ed573;
-  border: 2px solid #040406;
-  box-shadow: 0 0 8px #2ed573;
-}
-
-/* Customer Authentication Modal */
-.customer-modal-backdrop {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 2000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-.customer-modal-backdrop.active {
-  display: flex;
-}
-
-.customer-modal-dialog {
-  background: rgba(10, 10, 16, 0.96);
-  border: 1px solid var(--border-red);
-  border-radius: 20px;
-  width: 100%;
-  max-width: 440px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(196, 21, 46, 0.35);
-  position: relative;
-  overflow: hidden;
-  animation: authModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes authModalIn {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.customer-modal-dialog::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--wheels-crimson), var(--wheels-neon), transparent);
-}
-
-.customer-modal-header {
-  padding: 1.5rem 1.75rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.customer-modal-title {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.customer-modal-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.6rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 4px;
-  transition: color 0.2s ease;
-}
-
-.customer-modal-close:hover {
-  color: #fff;
-}
-
-.auth-tabs {
-  display: flex;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
-  margin: 1.25rem 1.75rem 0;
-}
-
-.auth-tab-btn {
-  flex: 1;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: none;
   background: transparent;
-  color: var(--text-sub);
-  font-family: var(--font-heading);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  border: none;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+  vertical-align: middle;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.auth-tab-btn.active {
-  background: linear-gradient(135deg, var(--wheels-crimson) 0%, var(--wheels-dark-red) 100%);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(196, 21, 46, 0.4);
+.btn-theme-toggle:focus-visible .theme-toggle-track {
+  outline: 2px solid var(--wheels-crimson);
+  outline-offset: 2px;
 }
 
-.customer-modal-body {
-  padding: 1.25rem 1.75rem 1.75rem;
-}
-
-.auth-form-group {
-  margin-bottom: 1.15rem;
-}
-
-.auth-label {
-  display: block;
-  font-family: var(--font-heading);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-sub);
-  margin-bottom: 5px;
-}
-
-.auth-input {
-  width: 100%;
-  background: rgba(18, 18, 26, 0.95);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 11px 14px;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-  transition: all 0.25s ease;
+.theme-toggle-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 66px;
+  height: 36px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(16, 16, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
   box-sizing: border-box;
 }
 
-.auth-input:focus {
-  outline: none;
+.btn-theme-toggle:hover .theme-toggle-track {
   border-color: var(--wheels-crimson);
-  box-shadow: 0 0 15px rgba(196, 21, 46, 0.35);
-  background: rgba(24, 24, 38, 0.95);
-}
-
-.btn-auth-submit {
-  width: 100%;
-  background: linear-gradient(135deg, var(--wheels-crimson) 0%, var(--wheels-dark-red) 100%);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 12px;
-  font-family: var(--font-heading);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  margin-top: 0.75rem;
-  box-shadow: 0 4px 18px rgba(196, 21, 46, 0.4);
-}
-
-.btn-auth-submit:hover {
-  background: linear-gradient(135deg, var(--wheels-neon) 0%, var(--wheels-crimson) 100%);
-  box-shadow: 0 6px 25px rgba(196, 21, 46, 0.75);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), 0 0 16px rgba(196, 21, 46, 0.45);
   transform: translateY(-1px);
 }
 
-.auth-feedback-box {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  margin-bottom: 1.15rem;
-  text-align: center;
-  display: none;
-}
-
-.auth-feedback-box.error {
-  display: block;
-  background: rgba(255, 43, 71, 0.15);
-  border: 1px solid rgba(255, 43, 71, 0.4);
-  color: #ff556b;
-}
-
-.auth-feedback-box.success {
-  display: block;
-  background: rgba(46, 213, 115, 0.15);
-  border: 1px solid rgba(46, 213, 115, 0.4);
-  color: #2ed573;
-}
-
-/* Logged-In Profile Card inside Modal */
-.customer-profile-view {
-  text-align: center;
-  padding: 1rem 0;
-}
-
-.customer-profile-avatar-big {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgba(18, 18, 26, 0.9);
-  border: 2px solid var(--wheels-crimson);
+.theme-toggle-icon {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
-  box-shadow: 0 0 20px rgba(196, 21, 46, 0.35);
+  width: 22px;
+  height: 22px;
+  transition: all 0.3s ease;
+  pointer-events: none;
 }
 
-.customer-profile-avatar-big svg {
-  width: 32px;
-  height: 32px;
-  color: var(--text-sub);
+.theme-toggle-icon svg {
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease, color 0.25s ease;
 }
 
-.customer-profile-name {
-  font-family: var(--font-heading);
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 3px;
+/* Sliding Thumb Knob */
+.theme-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  z-index: 1;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease;
+  pointer-events: none;
 }
 
-.customer-profile-email {
-  font-size: 0.82rem;
-  color: var(--text-sub);
-  margin-bottom: 1rem;
+/* -------------------------------------------------------------
+   DARK MODE STATE (Default Luxury Automotive Midnight Cockpit)
+   Thumb is on the right (over the moon)
+   ------------------------------------------------------------- */
+:root:not([data-theme="light"]) .theme-toggle-thumb,
+[data-theme="dark"] .theme-toggle-thumb {
+  transform: translateX(30px);
+  background: linear-gradient(135deg, var(--wheels-crimson) 0%, var(--wheels-dark-red) 100%);
+  box-shadow: 0 0 14px rgba(196, 21, 46, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
-.customer-profile-badge {
-  display: inline-block;
-  background: rgba(46, 213, 115, 0.12);
-  border: 1px solid rgba(46, 213, 115, 0.4);
-  color: #2ed573;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 1.5rem;
+:root:not([data-theme="light"]) .theme-icon-sun,
+[data-theme="dark"] .theme-icon-sun {
+  color: var(--text-muted);
+  opacity: 0.4;
+  transform: scale(0.85);
+}
+
+:root:not([data-theme="light"]) .theme-icon-moon,
+[data-theme="dark"] .theme-icon-moon {
+  color: #ffffff;
+  opacity: 1;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+}
+
+/* -------------------------------------------------------------
+   LIGHT MODE STATE (Clean Titanium Showroom Daylight)
+   Thumb is on the left (over the sun)
+   ------------------------------------------------------------- */
+[data-theme="light"] .theme-toggle-track {
+  background: rgba(235, 237, 243, 0.95);
+  border-color: rgba(0, 0, 0, 0.16);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .btn-theme-toggle:hover .theme-toggle-track {
+  border-color: var(--wheels-crimson);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08), 0 0 14px rgba(196, 21, 46, 0.35);
+}
+
+[data-theme="light"] .theme-toggle-thumb {
+  transform: translateX(0px);
+  background: linear-gradient(135deg, #ffffff 0%, #f1f3f7 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 171, 0, 0.5);
+}
+
+[data-theme="light"] .theme-icon-sun {
+  color: #ff9800;
+  opacity: 1;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 4px rgba(255, 152, 0, 0.5));
+}
+
+[data-theme="light"] .theme-icon-moon {
+  color: #718096;
+  opacity: 0.4;
+  transform: scale(0.85);
 }
 
 /* ==========================================================================
@@ -2319,7 +2304,7 @@ textarea.form-control {
   font-family: var(--font-heading);
   font-size: 1.15rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--uni-white);
   margin: 0 0 4px 0;
   line-height: 1.25;
 }
@@ -2335,9 +2320,9 @@ textarea.form-control {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 1.25rem;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
 }
 
@@ -2357,7 +2342,7 @@ textarea.form-control {
 .spec-value {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2853,9 +2838,20 @@ textarea.form-control {
     font-size: 0.74rem;
   }
 
-  .btn-nav-user-circle {
-    width: 38px;
-    height: 38px;
+  .theme-toggle-track {
+    width: 58px;
+    height: 32px;
+    padding: 0 5px;
+  }
+  .theme-toggle-thumb {
+    width: 24px;
+    height: 24px;
+    top: 3px;
+    left: 3px;
+  }
+  :root:not([data-theme="light"]) .theme-toggle-thumb,
+  [data-theme="dark"] .theme-toggle-thumb {
+    transform: translateX(26px);
   }
 
   /* Financial Calculator Mobile Bottom Sheet / Modal */

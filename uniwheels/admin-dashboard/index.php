@@ -4,7 +4,9 @@
  * Left-Sidebar Architecture with Fleet CRUD, Image Uploads, Employees, and Rules & Roles
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Authentication Gate: Require logged-in session
 if (!isset($_SESSION['user_id'])) {
@@ -32,43 +34,47 @@ if (!is_dir($cars_img_dir)) {
 }
 
 // Helper: Get list of existing car images
-function getAvailableCarImages($dir) {
-    $images = [];
-    if (is_dir($dir)) {
-        $files = scandir($dir);
-        foreach ($files as $f) {
-            if (preg_match('/\.(png|jpg|jpeg|webp|avif)$/i', $f)) {
-                $images[] = $f;
+if (!function_exists('getAvailableCarImages')) {
+    function getAvailableCarImages($dir) {
+        $images = [];
+        if (is_dir($dir)) {
+            $files = scandir($dir);
+            foreach ($files as $f) {
+                if (preg_match('/\.(png|jpg|jpeg|webp|avif)$/i', $f)) {
+                    $images[] = $f;
+                }
             }
         }
+        sort($images);
+        return $images;
     }
-    sort($images);
-    return $images;
 }
 
 $available_images = getAvailableCarImages($cars_img_dir);
 
 // Helper: Handle direct image upload
-function handleCarImageUpload($file_input, $cars_img_dir, $fallback_image = 'car-1.png') {
-    if (isset($_FILES[$file_input]) && $_FILES[$file_input]['error'] === UPLOAD_ERR_OK) {
-        $file_tmp = $_FILES[$file_input]['tmp_name'];
-        $orig_name = $_FILES[$file_input]['name'];
-        $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
-        $allowed = ['png', 'jpg', 'jpeg', 'webp', 'avif'];
-        
-        if (in_array($ext, $allowed)) {
-            // Clean filename and make unique
-            $clean_basename = preg_replace('/[^a-zA-Z0-9_\-]/', '', pathinfo($orig_name, PATHINFO_FILENAME));
-            if (empty($clean_basename)) $clean_basename = 'car';
-            $unique_name = $clean_basename . '-' . time() . '.' . $ext;
-            $dest_path = $cars_img_dir . '/' . $unique_name;
+if (!function_exists('handleCarImageUpload')) {
+    function handleCarImageUpload($file_input, $cars_img_dir, $fallback_image = 'car-1.png') {
+        if (isset($_FILES[$file_input]) && $_FILES[$file_input]['error'] === UPLOAD_ERR_OK) {
+            $file_tmp = $_FILES[$file_input]['tmp_name'];
+            $orig_name = $_FILES[$file_input]['name'];
+            $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
+            $allowed = ['png', 'jpg', 'jpeg', 'webp', 'avif'];
             
-            if (move_uploaded_file($file_tmp, $dest_path)) {
-                return $unique_name;
+            if (in_array($ext, $allowed)) {
+                // Clean filename and make unique
+                $clean_basename = preg_replace('/[^a-zA-Z0-9_\-]/', '', pathinfo($orig_name, PATHINFO_FILENAME));
+                if (empty($clean_basename)) $clean_basename = 'car';
+                $unique_name = $clean_basename . '-' . time() . '.' . $ext;
+                $dest_path = $cars_img_dir . '/' . $unique_name;
+                
+                if (move_uploaded_file($file_tmp, $dest_path)) {
+                    return $unique_name;
+                }
             }
         }
+        return $fallback_image;
     }
-    return $fallback_image;
 }
 
 // Handle POST actions
@@ -94,6 +100,9 @@ if ($pdo && $request_method === 'POST') {
         $seating = trim($_POST['seating'] ?? '2 Seats');
         $wheel_name = trim($_POST['wheel_name'] ?? '');
         $status = trim($_POST['status'] ?? 'AVAILABLE');
+        if (!in_array($status, ['AVAILABLE', 'RESERVED', 'SOLD'])) {
+            $status = 'AVAILABLE';
+        }
         $is_recommended = isset($_POST['is_recommended']) ? 1 : 0;
         $is_featured = isset($_POST['is_featured']) ? 1 : 0;
         $front_fitment = trim($_POST['front_fitment'] ?? '');
@@ -101,16 +110,17 @@ if ($pdo && $request_method === 'POST') {
         $finish = trim($_POST['finish'] ?? '');
         $alloy_type = trim($_POST['alloy_type'] ?? '');
         $weight = trim($_POST['weight'] ?? '');
+        $sold_at = ($status === 'SOLD') ? date('Y-m-d H:i:s') : null;
         
         // Handle image selection or upload
         $selected_existing = trim($_POST['image_file'] ?? 'car-1.png');
         $image_file = handleCarImageUpload('car_upload_file', $cars_img_dir, $selected_existing);
 
         if ($name && $wheel_name) {
-            $stmt = $pdo->prepare("INSERT INTO cars (name, brand, price, stock_id, mileage, transmission, body_type, fuel_type, seating, wheel_name, status, is_recommended, is_featured, front_fitment, rear_fitment, finish, alloy_type, weight, image_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $brand, $price, $stock_id, $mileage, $transmission, $body_type, $fuel_type, $seating, $wheel_name, $status, $is_recommended, $is_featured, $front_fitment, $rear_fitment, $finish, $alloy_type, $weight, $image_file]);
+            $stmt = $pdo->prepare("INSERT INTO cars (name, brand, price, stock_id, mileage, transmission, body_type, fuel_type, seating, wheel_name, status, is_recommended, is_featured, front_fitment, rear_fitment, finish, alloy_type, weight, image_file, sold_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $brand, $price, $stock_id, $mileage, $transmission, $body_type, $fuel_type, $seating, $wheel_name, $status, $is_recommended, $is_featured, $front_fitment, $rear_fitment, $finish, $alloy_type, $weight, $image_file, $sold_at]);
             $_SESSION['flash'] = "Vehicle '{$name}' ({$brand}) created successfully with image '{$image_file}'!";
-            header("Location: index.php?tab=cars");
+            header("Location: index.php?tab=" . ($status === 'SOLD' ? 'sold' : 'cars'));
             exit;
         }
     }
@@ -128,6 +138,9 @@ if ($pdo && $request_method === 'POST') {
         $seating = trim($_POST['seating'] ?? '2 Seats');
         $wheel_name = trim($_POST['wheel_name'] ?? '');
         $status = trim($_POST['status'] ?? 'AVAILABLE');
+        if (!in_array($status, ['AVAILABLE', 'RESERVED', 'SOLD'])) {
+            $status = 'AVAILABLE';
+        }
         $is_recommended = isset($_POST['is_recommended']) ? 1 : 0;
         $is_featured = isset($_POST['is_featured']) ? 1 : 0;
         $front_fitment = trim($_POST['front_fitment'] ?? '');
@@ -142,10 +155,14 @@ if ($pdo && $request_method === 'POST') {
         $image_file = handleCarImageUpload('car_upload_file', $cars_img_dir, $selected_image);
 
         if ($id && $name) {
-            $stmt = $pdo->prepare("UPDATE cars SET name=?, brand=?, price=?, stock_id=?, mileage=?, transmission=?, body_type=?, fuel_type=?, seating=?, wheel_name=?, status=?, is_recommended=?, is_featured=?, front_fitment=?, rear_fitment=?, finish=?, alloy_type=?, weight=?, image_file=? WHERE id=?");
+            if ($status === 'SOLD') {
+                $stmt = $pdo->prepare("UPDATE cars SET name=?, brand=?, price=?, stock_id=?, mileage=?, transmission=?, body_type=?, fuel_type=?, seating=?, wheel_name=?, status=?, is_recommended=?, is_featured=?, front_fitment=?, rear_fitment=?, finish=?, alloy_type=?, weight=?, image_file=?, sold_at=IFNULL(sold_at, NOW()) WHERE id=?");
+            } else {
+                $stmt = $pdo->prepare("UPDATE cars SET name=?, brand=?, price=?, stock_id=?, mileage=?, transmission=?, body_type=?, fuel_type=?, seating=?, wheel_name=?, status=?, is_recommended=?, is_featured=?, front_fitment=?, rear_fitment=?, finish=?, alloy_type=?, weight=?, image_file=?, sold_at=NULL WHERE id=?");
+            }
             $stmt->execute([$name, $brand, $price, $stock_id, $mileage, $transmission, $body_type, $fuel_type, $seating, $wheel_name, $status, $is_recommended, $is_featured, $front_fitment, $rear_fitment, $finish, $alloy_type, $weight, $image_file, $id]);
             $_SESSION['flash'] = "Vehicle #{$id} ({$name}) updated successfully!";
-            header("Location: index.php?tab=cars");
+            header("Location: index.php?tab=" . ($status === 'SOLD' ? 'sold' : 'cars'));
             exit;
         }
     }
@@ -156,7 +173,7 @@ if ($pdo && $request_method === 'POST') {
             $stmt = $pdo->prepare("DELETE FROM cars WHERE id=?");
             $stmt->execute([$id]);
             $_SESSION['flash'] = "Vehicle #{$id} deleted from fleet catalog.";
-            header("Location: index.php?tab=cars");
+            header("Location: index.php?tab=" . urlencode($current_tab));
             exit;
         }
     }
@@ -181,34 +198,28 @@ if ($pdo && $request_method === 'POST') {
         }
     }
 
-    if ($action === 'toggle_status') {
+    if ($action === 'set_car_status') {
         $id = intval($_POST['id'] ?? 0);
-        if ($id) {
-            $stmt = $pdo->prepare("SELECT status FROM cars WHERE id = ?");
-            $stmt->execute([$id]);
-            $current_status = $stmt->fetchColumn();
-            
-            $next_status = 'AVAILABLE';
-            if ($current_status === 'AVAILABLE') $next_status = 'BESPOKE';
-            elseif ($current_status === 'BESPOKE') $next_status = 'SOLD';
-            elseif ($current_status === 'SOLD') $next_status = 'OUT OF STOCK';
-            else $next_status = 'AVAILABLE';
-            
-            $pdo->prepare("UPDATE cars SET status = ? WHERE id = ?")->execute([$next_status, $id]);
-            $_SESSION['flash'] = "Status changed to '{$next_status}' for vehicle #{$id}.";
+        $new_status = trim($_POST['new_status'] ?? 'AVAILABLE');
+        if ($id && in_array($new_status, ['AVAILABLE', 'RESERVED', 'SOLD'])) {
+            if ($new_status === 'SOLD') {
+                $pdo->prepare("UPDATE cars SET status = 'SOLD', sold_at = IFNULL(sold_at, NOW()) WHERE id = ?")->execute([$id]);
+                $_SESSION['flash'] = "Vehicle #{$id} marked as SOLD and transferred to Sold Cars archive.";
+            } else {
+                $pdo->prepare("UPDATE cars SET status = ?, sold_at = NULL WHERE id = ?")->execute([$new_status, $id]);
+                $_SESSION['flash'] = "Vehicle #{$id} status set to {$new_status}.";
+            }
             header("Location: index.php?tab=" . urlencode($current_tab));
             exit;
         }
     }
 
-    if ($action === 'set_car_status') {
+    if ($action === 'retract_sold_car') {
         $id = intval($_POST['id'] ?? 0);
-        $new_status = trim($_POST['new_status'] ?? 'AVAILABLE');
-        if ($id && in_array($new_status, ['AVAILABLE', 'BESPOKE', 'RECOMMENDED', 'SOLD', 'OUT OF STOCK'])) {
-            $pdo->prepare("UPDATE cars SET status = ? WHERE id = ?")->execute([$new_status, $id]);
-            $msg = ($new_status === 'SOLD') ? "Vehicle #{$id} marked as SOLD (Archived from active public catalog)." : "Status set to {$new_status} for vehicle #{$id}.";
-            $_SESSION['flash'] = $msg;
-            header("Location: index.php?tab=" . urlencode($current_tab));
+        if ($id) {
+            $pdo->prepare("UPDATE cars SET status = 'AVAILABLE', sold_at = NULL WHERE id = ?")->execute([$id]);
+            $_SESSION['flash'] = "Vehicle #{$id} successfully retracted to the Active Fleet (status set to AVAILABLE).";
+            header("Location: index.php?tab=cars");
             exit;
         }
     }
@@ -247,123 +258,8 @@ if ($pdo && $request_method === 'POST') {
         exit;
     }
 
-    // ================= ROLE ACTIONS (Super Admin Only) =================
-    if ($action === 'update_role') {
-        if ($current_user['role'] !== 'admin') {
-            $_SESSION['flash_error'] = "Only Super Administrators can edit role configurations.";
-            header("Location: index.php?tab=roles");
-            exit;
-        }
 
-        $role_id = intval($_POST['role_id'] ?? 0);
-        $name = trim($_POST['name'] ?? '');
-        $badge = trim($_POST['badge'] ?? 'admin');
-        $description = trim($_POST['description'] ?? '');
-        $permissions = trim($_POST['permissions'] ?? '');
 
-        if ($role_id && $name) {
-            $stmt = $pdo->prepare("UPDATE roles SET name = ?, badge = ?, description = ?, permissions = ? WHERE id = ?");
-            $stmt->execute([$name, $badge, $description, $permissions, $role_id]);
-            $_SESSION['flash'] = "Role '{$name}' specifications and description updated successfully!";
-            header("Location: index.php?tab=roles");
-            exit;
-        }
-    }
-
-    if ($action === 'create_role') {
-        if ($current_user['role'] !== 'admin') {
-            $_SESSION['flash_error'] = "Only Super Administrators can create new roles.";
-            header("Location: index.php?tab=roles");
-            exit;
-        }
-
-        $role_key = preg_replace('/[^a-zA-Z0-9_\-]/', '', strtolower(trim($_POST['role_key'] ?? '')));
-        $name = trim($_POST['name'] ?? '');
-        $badge = trim($_POST['badge'] ?? 'employee');
-        $description = trim($_POST['description'] ?? '');
-        $permissions = trim($_POST['permissions'] ?? '');
-
-        if ($role_key && $name) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO roles (role_key, name, badge, description, permissions) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$role_key, $name, $badge, $description, $permissions]);
-                $_SESSION['flash'] = "New role '{$name}' created successfully!";
-            } catch (PDOException $e) {
-                $_SESSION['flash_error'] = "Failed to create role: " . $e->getMessage();
-            }
-            header("Location: index.php?tab=roles");
-            exit;
-        }
-    }
-
-    if ($action === 'delete_role') {
-        if ($current_user['role'] !== 'admin') {
-            $_SESSION['flash_error'] = "Only Super Administrators can delete roles.";
-            header("Location: index.php?tab=roles");
-            exit;
-        }
-
-        $role_id = intval($_POST['role_id'] ?? 0);
-        if ($role_id) {
-            $stmt = $pdo->prepare("SELECT role_key, name FROM roles WHERE id = ?");
-            $stmt->execute([$role_id]);
-            $r_del = $stmt->fetch();
-            if ($r_del) {
-                if (in_array($r_del['role_key'], ['admin', 'manager', 'employee', 'visitor'])) {
-                    $_SESSION['flash_error'] = "Cannot delete core system role '{$r_del['name']}'. Core operational tiers are protected.";
-                } else {
-                    $pdo->prepare("DELETE FROM roles WHERE id = ?")->execute([$role_id]);
-                    $_SESSION['flash'] = "Custom role '{$r_del['name']}' removed successfully.";
-                }
-            }
-        }
-        header("Location: index.php?tab=roles");
-        exit;
-    }
-
-    // ================= INQUIRY ACTIONS =================
-    if ($action === 'update_inquiry_status') {
-        $id = intval($_POST['id'] ?? 0);
-        $status = trim($_POST['status'] ?? 'new');
-        $valid_statuses = ['new', 'ongoing', 'completed', 'cancelled'];
-        if ($id && in_array($status, $valid_statuses)) {
-            $stmt = $pdo->prepare("UPDATE inquiries SET status = ? WHERE id = ?");
-            $stmt->execute([$status, $id]);
-            $_SESSION['flash'] = "Inquiry #{$id} status changed to '" . strtoupper($status) . "'.";
-        }
-        header("Location: index.php?tab=inquiries");
-        exit;
-    }
-
-    if ($action === 'update_inquiry_notes') {
-        $id = intval($_POST['id'] ?? 0);
-        $status = trim($_POST['status'] ?? '');
-        $notes = trim($_POST['staff_notes'] ?? '');
-        $valid_statuses = ['new', 'ongoing', 'completed', 'cancelled'];
-        if ($id) {
-            if ($status && in_array($status, $valid_statuses)) {
-                $stmt = $pdo->prepare("UPDATE inquiries SET status = ?, staff_notes = ? WHERE id = ?");
-                $stmt->execute([$status, $notes, $id]);
-            } else {
-                $stmt = $pdo->prepare("UPDATE inquiries SET staff_notes = ? WHERE id = ?");
-                $stmt->execute([$notes, $id]);
-            }
-            $_SESSION['flash'] = "Showroom consultation notes updated for Inquiry #{$id}.";
-        }
-        header("Location: index.php?tab=inquiries");
-        exit;
-    }
-
-    if ($action === 'delete_inquiry') {
-        $id = intval($_POST['id'] ?? 0);
-        if ($id) {
-            $stmt = $pdo->prepare("DELETE FROM inquiries WHERE id = ?");
-            $stmt->execute([$id]);
-            $_SESSION['flash'] = "Inquiry file #{$id} deleted successfully.";
-        }
-        header("Location: index.php?tab=inquiries");
-        exit;
-    }
 }
 
 // Read flash notices
@@ -374,23 +270,34 @@ unset($_SESSION['flash'], $_SESSION['flash_error']);
 // Refresh images list after potential upload
 $available_images = getAvailableCarImages($cars_img_dir);
 
-// Fetch fleet cars
-$cars = [];
-$stats = ['total' => 0, 'available' => 0, 'recommended' => 0, 'featured' => 0, 'sold' => 0];
+// Fetch fleet cars (Active Fleet vs Sold Archive)
+$active_cars = [];
+$sold_cars = [];
+$stats = ['total' => 0, 'available' => 0, 'reserved' => 0, 'sold' => 0, 'recommended' => 0, 'featured' => 0];
 $all_existing_brands = [];
 
 if ($pdo) {
-    $stmt = $pdo->query("SELECT * FROM cars ORDER BY id ASC");
-    $cars = $stmt->fetchAll();
+    // Active Fleet: Excludes SOLD
+    $stmt_active = $pdo->query("SELECT * FROM cars WHERE status != 'SOLD' ORDER BY id ASC");
+    $active_cars = $stmt_active->fetchAll();
 
-    foreach ($cars as $c) {
-        $stats['total']++;
+    // Sold Cars Archive: Only SOLD, sorted by sold_at DESC, id DESC
+    $stmt_sold = $pdo->query("SELECT * FROM cars WHERE status = 'SOLD' ORDER BY sold_at DESC, id DESC");
+    $sold_cars = $stmt_sold->fetchAll();
+
+    $stats['total'] = count($active_cars);
+    $stats['sold'] = count($sold_cars);
+
+    foreach ($active_cars as $c) {
         $st = strtoupper($c['status']);
         if ($st === 'AVAILABLE') $stats['available']++;
-        if ($st === 'SOLD') $stats['sold']++;
+        if ($st === 'RESERVED') $stats['reserved']++;
         if (!empty($c['is_recommended'])) $stats['recommended']++;
         if (!empty($c['is_featured'])) $stats['featured']++;
     }
+
+    // Keep $cars mapped to active fleet for backward compatibility
+    $cars = $active_cars;
 
     try {
         $stmt_brands = $pdo->query("SELECT DISTINCT brand FROM cars WHERE brand IS NOT NULL AND brand != '' ORDER BY brand ASC");
@@ -401,36 +308,6 @@ if (empty($all_existing_brands)) {
     $all_existing_brands = ['Ferrari', 'Apollo', 'Nissan', 'Porsche', 'Lamborghini', 'Chevrolet', 'BMW', 'McLaren'];
 }
 
-// Fetch inquiries from inquiries table
-$inquiries = [];
-$inquiry_stats = ['total' => 0, 'new' => 0, 'ongoing' => 0, 'completed' => 0, 'cancelled' => 0];
-if ($pdo) {
-    try {
-        $stmt = $pdo->query("SELECT * FROM inquiries ORDER BY id DESC");
-        $inquiries = $stmt->fetchAll();
-        foreach ($inquiries as $inq) {
-            $inquiry_stats['total']++;
-            $st = strtolower($inq['status'] ?? 'new');
-            if (isset($inquiry_stats[$st])) {
-                $inquiry_stats[$st]++;
-            }
-        }
-    } catch (PDOException $e) {
-        // Inquiries table query fallback
-    }
-}
-$inquiry_count = $inquiry_stats['total'];
-$new_inquiry_count = $inquiry_stats['new'];
-
-// Filter inquiries by status if requested
-$filter_status = strtolower(trim($_GET['status'] ?? 'all'));
-$filtered_inquiries = $inquiries;
-if (in_array($filter_status, ['new', 'ongoing', 'completed', 'cancelled'])) {
-    $filtered_inquiries = array_filter($inquiries, function($inq) use ($filter_status) {
-        return strtolower($inq['status'] ?? '') === $filter_status;
-    });
-}
-
 // Fetch employees for staff directory
 $users_list = [];
 if ($pdo) {
@@ -439,20 +316,16 @@ if ($pdo) {
 }
 $employee_count = count($users_list);
 
-// Count registered customers from users table
-$customer_count = 0;
-if ($pdo) {
-    $customer_count = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-}
-
-// Fetch roles from roles table
+// Fetch roles from roles table (retained for employee assignment options)
 $roles_list = [];
 if ($pdo) {
-    $roles_list = $pdo->query("SELECT * FROM roles ORDER BY id ASC")->fetchAll();
+    try {
+        $roles_list = $pdo->query("SELECT * FROM roles ORDER BY id ASC")->fetchAll();
+    } catch (Exception $e) {}
 }
 
-// Active Tab validation
-$allowed_tabs = ['dashboard', 'cars', 'inquiries', 'employees', 'roles'];
+// Active Tab validation (Showroom dealership: inquiries and customer tabs removed)
+$allowed_tabs = ['dashboard', 'cars', 'sold', 'employees'];
 if (!in_array($current_tab, $allowed_tabs)) {
     $current_tab = 'dashboard';
 }
@@ -996,107 +869,88 @@ if (!in_array($current_tab, $allowed_tabs)) {
     }
 
     .status-badge.available {
-      background: rgba(46, 213, 115, 0.1);
-      border-color: rgba(46, 213, 115, 0.4);
+      background: rgba(46, 213, 115, 0.12);
+      border-color: rgba(46, 213, 115, 0.45);
       color: #2ed573;
     }
 
-    .status-badge.bespoke {
-      background: rgba(255, 171, 0, 0.1);
-      border-color: rgba(255, 171, 0, 0.4);
+    .status-badge.reserved {
+      background: rgba(255, 171, 0, 0.12);
+      border-color: rgba(255, 171, 0, 0.45);
       color: #ffab00;
     }
 
-    .status-badge.recommended {
-      background: rgba(196, 21, 46, 0.15);
-      border-color: var(--border-red);
-      color: var(--wheels-neon);
-    }
-
-    .status-badge.out-of-stock {
-      background: rgba(255, 71, 87, 0.1);
-      border-color: rgba(255, 71, 87, 0.4);
+    .status-badge.sold {
+      background: rgba(255, 71, 87, 0.12);
+      border-color: rgba(255, 71, 87, 0.45);
       color: #ff4757;
     }
 
-    /* Inquiry Status Badges */
-    .status-badge.inq-new {
-      background: rgba(255, 71, 87, 0.18);
-      border-color: rgba(255, 71, 87, 0.5);
-      color: #ff6b81;
-      box-shadow: 0 0 10px rgba(255, 71, 87, 0.25);
-    }
-    .status-badge.inq-ongoing {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.4);
-      color: #38bdf8;
-    }
-    .status-badge.inq-completed {
-      background: rgba(46, 213, 115, 0.15);
-      border-color: rgba(46, 213, 115, 0.4);
-      color: #2ed573;
-    }
-    .status-badge.inq-cancelled {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.15);
-      color: var(--text-muted);
-    }
-
-    .status-select {
-      background: rgba(18, 18, 28, 0.9);
+    .admin-status-select {
+      background: #0f1017;
       border: 1px solid var(--border-subtle);
-      color: #fff;
-      cursor: pointer;
+      border-radius: 6px;
+      padding: 6px 10px;
       font-family: var(--font-mono);
       font-size: 0.72rem;
-      border-radius: 6px;
-      padding: 5px 8px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      outline: none;
       transition: all 0.2s ease;
     }
-    .status-select.status-new { border-color: rgba(255, 71, 87, 0.5); color: #ff6b81; background: rgba(255, 71, 87, 0.12); }
-    .status-select.status-ongoing { border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
-    .status-select.status-completed { border-color: rgba(46, 213, 115, 0.4); color: #2ed573; background: rgba(46, 213, 115, 0.1); }
-    .status-select.status-cancelled { border-color: rgba(255, 255, 255, 0.15); color: var(--text-muted); }
-
-    /* Filter pill bar for inquiries */
-    .filter-pills-bar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 1.5rem;
+    .admin-status-select.status-available {
+      color: #2ed573;
+      border-color: rgba(46, 213, 115, 0.4);
+      background: rgba(46, 213, 115, 0.08);
     }
-    .filter-pill-item {
+    .admin-status-select.status-reserved {
+      color: #ffab00;
+      border-color: rgba(255, 171, 0, 0.4);
+      background: rgba(255, 171, 0, 0.08);
+    }
+    .admin-status-select.status-sold {
+      color: #ff4757;
+      border-color: rgba(255, 71, 87, 0.4);
+      background: rgba(255, 71, 87, 0.08);
+    }
+    .admin-status-select option {
+      background: #0d0d14;
+      color: #fff;
+    }
+
+    .fleet-subtabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.25rem;
+    }
+    .fleet-subtab-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       padding: 8px 16px;
-      border-radius: 10px;
-      background: rgba(16, 16, 24, 0.8);
-      border: 1px solid var(--border-subtle);
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-sub);
-      transition: all 0.2s ease;
-      cursor: pointer;
+      border-radius: 8px;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 700;
       text-decoration: none;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-sub);
     }
-    .filter-pill-item:hover, .filter-pill-item.active {
-      background: rgba(196, 21, 46, 0.18);
-      border-color: var(--border-red);
+    .fleet-subtab-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
       color: #fff;
     }
-    .filter-pill-item .pill-count {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 2px 7px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-main);
-    }
-    .filter-pill-item.active .pill-count {
-      background: var(--wheels-crimson);
+    .fleet-subtab-btn.active {
+      background: rgba(196, 21, 46, 0.15);
+      border-color: var(--wheels-crimson);
       color: #fff;
+      box-shadow: 0 0 15px rgba(196, 21, 46, 0.2);
     }
+
+
 
     .toggle-chip {
       background: transparent;
@@ -1609,21 +1463,18 @@ if (!in_array($current_tab, $allowed_tabs)) {
           </svg>
         </span>
         <span>Cars Fleet</span>
-        <span class="nav-badge"><?php echo $stats['total']; ?></span>
+        <span class="nav-badge"><?php echo count($active_cars); ?></span>
       </a>
 
-      <a href="index.php?tab=inquiries" class="nav-item <?php echo $current_tab === 'inquiries' ? 'active' : ''; ?>">
+      <a href="index.php?tab=sold" class="nav-item <?php echo $current_tab === 'sold' ? 'active' : ''; ?>">
         <span class="nav-icon">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
         </span>
-        <span>Client Inquiries</span>
-        <?php if ($new_inquiry_count > 0): ?>
-          <span class="nav-badge" style="background:var(--wheels-crimson); color:#fff; font-weight:700;"><?php echo $new_inquiry_count; ?> NEW</span>
-        <?php else: ?>
-          <span class="nav-badge"><?php echo $inquiry_count; ?></span>
-        <?php endif; ?>
+        <span>Sold Cars</span>
+        <span class="nav-badge" style="<?php echo count($sold_cars) > 0 ? 'background:rgba(255,71,87,0.2); color:#ff6b81;' : ''; ?>"><?php echo count($sold_cars); ?></span>
       </a>
 
       <a href="index.php?tab=employees" class="nav-item <?php echo $current_tab === 'employees' ? 'active' : ''; ?>">
@@ -1637,15 +1488,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
         </span>
         <span>Employees</span>
         <span class="nav-badge"><?php echo $employee_count; ?></span>
-      </a>
-
-      <a href="index.php?tab=roles" class="nav-item <?php echo $current_tab === 'roles' ? 'active' : ''; ?>">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-        </span>
-        <span>Rules & Roles</span>
       </a>
 
       <div class="nav-section-title" style="margin-top:1rem;">External</div>
@@ -1781,33 +1623,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
           <div class="stat-value" style="color:var(--wheels-neon);"><?php echo $employee_count; ?></div>
           <div class="stat-meta">Managed via <code>employees</code> table</div>
         </div>
-
-        <div class="stat-card">
-          <div class="stat-label">
-            <span>Registered Customers</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2ed573" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          </div>
-          <div class="stat-value" style="color:#2ed573;"><?php echo $customer_count; ?></div>
-          <div class="stat-meta">Customers in <code>users</code> table</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">
-            <span>New Leads & Inquiries</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--wheels-neon)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          </div>
-          <div class="stat-value" style="color:var(--wheels-neon);"><?php echo $new_inquiry_count; ?></div>
-          <div class="stat-meta">Awaiting staff response</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">
-            <span>Total Showroom Leads</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-          </div>
-          <div class="stat-value" style="color:#38bdf8;"><?php echo $inquiry_count; ?></div>
-          <div class="stat-meta">Managed via <code>inquiries</code> table</div>
-        </div>
       </div>
 
       <!-- Quick Fleet Snapshot Table -->
@@ -1828,7 +1643,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
                 <th>Status</th>
                 <th>Fitment (F / R)</th>
                 <th>Finish / Alloy</th>
-                <th>Highlights</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1860,86 +1674,10 @@ if (!in_array($current_tab, $allowed_tabs)) {
                     <div style="color:var(--text-sub); font-size:0.75rem;"><?php echo htmlspecialchars($c['alloy_type']); ?></div>
                   </td>
                   <td>
-                    <div style="display:flex; gap:6px;">
-                      <?php if ($c['is_recommended']): ?>
-                        <span class="toggle-chip active-rec">★ REC</span>
-                      <?php endif; ?>
-                      <?php if ($c['is_featured']): ?>
-                        <span class="toggle-chip active-feat">🔥 FEAT</span>
-                      <?php endif; ?>
-                    </div>
-                  </td>
-                  <td>
                     <button class="btn-table-action" onclick='openEditModal(<?php echo json_encode($c); ?>)'>Edit</button>
                   </td>
                 </tr>
               <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Recent Inquiries & Showroom Consultations Snapshot -->
-      <div class="card-panel">
-        <div class="card-panel-header">
-          <div class="card-panel-title">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--wheels-crimson)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span>Latest Showroom Inquiries & Client Leads</span>
-          </div>
-          <a href="index.php?tab=inquiries" class="btn btn-outline" style="padding:6px 12px; font-size:0.75rem;">Manage All Inquiries (<?php echo $inquiry_count; ?>) →</a>
-        </div>
-        
-        <div class="data-table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Ref ID</th>
-                <th>Client Name & Contact</th>
-                <th>Vehicle & Focus</th>
-                <th>Preferred Window</th>
-                <th>Status</th>
-                <th>Notes Preview</th>
-                <th style="text-align:right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($inquiries)): ?>
-                <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No client inquiries logged yet.</td></tr>
-              <?php else: ?>
-                <?php foreach (array_slice($inquiries, 0, 5) as $inq): ?>
-                  <tr>
-                    <td style="font-family:var(--font-mono); font-weight:700; color:var(--wheels-neon);">
-                      #INQ-<?php echo str_pad($inq['id'], 3, '0', STR_PAD_LEFT); ?>
-                    </td>
-                    <td>
-                      <div style="font-weight:700; color:#fff;"><?php echo htmlspecialchars($inq['name']); ?></div>
-                      <div style="font-size:0.75rem; color:var(--text-sub); display:flex; gap:10px;">
-                        <span><a href="tel:<?php echo htmlspecialchars($inq['phone']); ?>" style="color:var(--text-sub);"><?php echo htmlspecialchars($inq['phone']); ?></a></span>
-                        <span>•</span>
-                        <span><a href="mailto:<?php echo htmlspecialchars($inq['email']); ?>" style="color:var(--text-sub);"><?php echo htmlspecialchars($inq['email']); ?></a></span>
-                      </div>
-                    </td>
-                    <td>
-                      <div style="font-weight:600; color:#fff;"><?php echo htmlspecialchars($inq['vehicle_name']); ?></div>
-                      <div style="font-size:0.72rem; color:var(--wheels-neon); font-family:var(--font-mono);"><?php echo htmlspecialchars($inq['inquiry_type']); ?></div>
-                    </td>
-                    <td style="font-size:0.8rem; color:var(--text-main);">
-                      <?php echo htmlspecialchars($inq['preferred_date'] ?: 'Flexible Window'); ?>
-                    </td>
-                    <td>
-                      <span class="status-badge inq-<?php echo strtolower($inq['status']); ?>">
-                        ● <?php echo strtoupper($inq['status']); ?>
-                      </span>
-                    </td>
-                    <td style="font-size:0.78rem; color:var(--text-sub); max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      <?php echo htmlspecialchars($inq['staff_notes'] ?: 'No internal notes'); ?>
-                    </td>
-                    <td style="text-align:right;">
-                      <a href="index.php?tab=inquiries" class="btn-table-action" style="padding:6px 10px;">Review Lead →</a>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
             </tbody>
           </table>
         </div>
@@ -1951,6 +1689,7 @@ if (!in_array($current_tab, $allowed_tabs)) {
       <div class="top-action-bar">
         <div class="page-title-box">
           <h1>Vehicle Fleet Management</h1>
+          <p>Manage active dealership inventory. Vehicles marked as AVAILABLE or RESERVED are listed here.</p>
         </div>
         <div class="top-actions">
           <button class="btn btn-primary" onclick="openCreateModal()">
@@ -1960,294 +1699,281 @@ if (!in_array($current_tab, $allowed_tabs)) {
         </div>
       </div>
 
+      <!-- Fleet Subtabs: Active vs Sold -->
+      <div class="fleet-subtabs">
+        <a href="index.php?tab=cars" class="fleet-subtab-btn active">
+          <span>Active Fleet</span>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.12); padding:2px 8px; border-radius:10px;"><?php echo count($active_cars); ?></span>
+        </a>
+        <a href="index.php?tab=sold" class="fleet-subtab-btn">
+          <span>Sold Cars Archive</span>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.12); padding:2px 8px; border-radius:10px;"><?php echo count($sold_cars); ?></span>
+        </a>
+      </div>
+
       <div class="card-panel">
         <div class="card-panel-header">
           <div class="card-panel-title">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--wheels-crimson)" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.7 2 10.8 2 11v5c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><circle cx="17" cy="17" r="2"></circle></svg>
-            <span>Fleet Inventory (<?php echo count($cars); ?> Vehicles)</span>
+            <span>Active Inventory (<?php echo count($active_cars); ?> Vehicles)</span>
           </div>
           <div style="font-size:0.75rem; color:var(--text-sub);">
-            Click badges to quickly cycle status or toggle featured badges
+            Use dropdown to switch status. Setting a car to <strong>SOLD</strong> moves it to the Sold Archive.
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="padding:1.25rem 1.25rem 0 1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:1.25rem; flex-wrap:wrap;">
+            <div style="position:relative; flex:1; max-width:420px;">
+              <input type="text" id="activeFleetSearch" onkeyup="filterAdminFleetTable('activeFleetTable', this.value, 'activeMatchCount')" placeholder="Search by Stock ID, Marque, Model, Wheel, Fitment..." style="width:100%; padding:10px 14px 10px 38px; background:rgba(255,255,255,0.04); border:1px solid var(--border-subtle); border-radius:8px; color:#fff; font-size:0.85rem; font-family:var(--font-body); outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--wheels-crimson)'" onblur="this.style.borderColor='var(--border-subtle)'">
+              <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); pointer-events:none; opacity:0.4;" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); font-family:var(--font-mono);">
+              Showing <span id="activeMatchCount" style="color:var(--wheels-neon); font-weight:700;"><?php echo count($active_cars); ?></span> of <?php echo count($active_cars); ?> active vehicles
+            </div>
           </div>
         </div>
 
         <div class="data-table-wrapper">
-          <table class="data-table">
+          <table class="data-table" id="activeFleetTable">
             <thead>
               <tr>
-                <th style="width:70px;">Stock ID</th>
+                <th style="width:75px;">Stock ID</th>
                 <th>Vehicle & Marque</th>
                 <th>Price & Terms</th>
                 <th>Status</th>
-                <th>Showcase</th>
                 <th>Specifications (Mi, Trans, Fuel)</th>
                 <th>Wheels & Fitment</th>
                 <th style="text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($cars as $c): ?>
-                <tr>
-                  <td style="font-family:var(--font-mono); font-weight:700; color:var(--wheels-neon); font-size:0.75rem;">
-                    #<?php echo htmlspecialchars($c['stock_id'] ?: 'UW-' . $c['id']); ?>
-                  </td>
-                  <td>
-                    <div class="car-cell-flex">
-                      <div class="car-thumb-box">
-                        <img src="../assets/images/cars/<?php echo htmlspecialchars($c['image_file']); ?>" alt="" class="car-thumb-img" onerror="this.src='../assets/images/cars/car-1.png'">
-                      </div>
-                      <div>
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
-                          <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(196,21,46,0.2); color:var(--wheels-neon); text-transform:uppercase; font-family:var(--font-heading);"><?php echo htmlspecialchars($c['brand'] ?: 'UniWheels'); ?></span>
-                          <span style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);"><?php echo htmlspecialchars($c['body_type'] ?: 'Coupe'); ?></span>
-                        </div>
-                        <div class="car-name-title"><?php echo htmlspecialchars($c['name']); ?></div>
-                        <div class="car-wheel-subtitle"><?php echo htmlspecialchars($c['wheel_name']); ?></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div style="font-family:var(--font-heading); font-weight:800; font-size:1rem; color:#fff;">
-                      ₱<?php echo number_format($c['price'] ?: 0, 0); ?>
-                    </div>
-                    <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">
-                      Est. ₱<?php echo number_format(($c['price'] * 0.8 * (0.059/12) * pow(1 + 0.059/12, 60)) / (pow(1 + 0.059/12, 60) - 1), 0); ?>/mo
-                    </div>
-                  </td>
-                  <td>
-                    <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
-                      <form method="POST" action="index.php?tab=cars" style="display:inline;">
-                        <input type="hidden" name="action" value="toggle_status">
-                        <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                        <button type="submit" class="status-badge <?php echo strtolower(str_replace(' ', '-', $c['status'])); ?>" title="Click to cycle status">
-                          ● <?php echo htmlspecialchars($c['status']); ?>
-                        </button>
-                      </form>
-                      <?php if (strtoupper($c['status']) !== 'SOLD'): ?>
-                        <form method="POST" action="index.php?tab=cars" style="display:inline;">
-                          <input type="hidden" name="action" value="set_car_status">
-                          <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                          <input type="hidden" name="new_status" value="SOLD">
-                          <button type="submit" class="btn-table-action" style="padding:2px 8px; font-size:0.68rem; background:rgba(255,71,87,0.15); color:#ff4757; border-color:rgba(255,71,87,0.3);" title="Mark as SOLD (Archived from active public catalog)">
-                            ✕ Mark Sold
-                          </button>
-                        </form>
-                      <?php else: ?>
-                        <form method="POST" action="index.php?tab=cars" style="display:inline;">
-                          <input type="hidden" name="action" value="set_car_status">
-                          <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                          <input type="hidden" name="new_status" value="AVAILABLE">
-                          <button type="submit" class="btn-table-action" style="padding:2px 8px; font-size:0.68rem; background:rgba(46,213,115,0.15); color:#2ed573; border-color:rgba(46,213,115,0.3);" title="Restore to Available in public catalog">
-                            ✓ Make Available
-                          </button>
-                        </form>
-                      <?php endif; ?>
-                    </div>
-                  </td>
-                  <td>
-                    <!-- Toggle Recommended (Hero Showcase) -->
-                    <form method="POST" action="index.php?tab=cars" style="display:inline;">
-                      <input type="hidden" name="action" value="toggle_recommended">
-                      <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                      <button type="submit" class="toggle-chip <?php echo $c['is_recommended'] ? 'active-rec' : ''; ?>" title="<?php echo $c['is_recommended'] ? 'Featured in Homepage Hero Casino Carousel. Click to remove.' : 'Click to feature in Homepage Hero Casino Carousel.'; ?>" style="display:inline-flex; align-items:center; gap:5px; padding:6px 10px; font-size:0.75rem; font-weight:700; border-radius:8px;">
-                        <?php if ($c['is_recommended']): ?>
-                          <span style="color:#ffab00;">★</span> Hero
-                        <?php else: ?>
-                          <span style="opacity:0.4;">☆</span> Regular
-                        <?php endif; ?>
-                      </button>
-                    </form>
-                  </td>
-                  <td style="font-family:var(--font-mono); font-size:0.75rem;">
-                    <div><span style="color:var(--text-muted);">Mi:</span> <?php echo htmlspecialchars($c['mileage'] ?: 'Delivery Miles'); ?></div>
-                    <div><span style="color:var(--text-muted);">Trans:</span> <?php echo htmlspecialchars($c['transmission'] ?: 'Dual-Clutch'); ?></div>
-                    <div><span style="color:var(--text-muted);">Fuel:</span> <?php echo htmlspecialchars($c['fuel_type'] ?: 'Gasoline'); ?></div>
-                  </td>
-                  <td style="font-family:var(--font-mono); font-size:0.72rem;">
-                    <div><span style="color:var(--text-muted);">F:</span> <?php echo htmlspecialchars($c['front_fitment']); ?></div>
-                    <div><span style="color:var(--text-muted);">R:</span> <?php echo htmlspecialchars($c['rear_fitment']); ?></div>
-                    <div style="color:var(--text-sub);"><?php echo htmlspecialchars($c['finish']); ?></div>
-                  </td>
-                  <td style="text-align:right;">
-                    <div class="table-actions" style="justify-content:flex-end;">
-                      <button class="btn-table-action" onclick='openEditModal(<?php echo json_encode($c); ?>)'>Edit</button>
-                      <form method="POST" action="index.php?tab=cars" onsubmit="return confirm('Are you sure you want to permanently delete <?php echo addslashes($c['name']); ?>?');" style="display:inline;">
-                        <input type="hidden" name="action" value="delete_car">
-                        <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                        <button type="submit" class="btn-table-action delete">Delete</button>
-                      </form>
-                    </div>
+              <?php if (empty($active_cars)): ?>
+                <tr class="no-results-row">
+                  <td colspan="7" style="text-align:center; padding:3rem 1rem; color:var(--text-muted);">
+                    <div style="font-size:2rem; margin-bottom:8px; opacity:0.5;">🚗</div>
+                    <div style="font-size:1rem; font-weight:600; color:#fff; margin-bottom:4px;">No Active Vehicles Found</div>
+                    <div style="font-size:0.82rem;">Click "Add New Vehicle" above to add your first supercar to the active fleet.</div>
                   </td>
                 </tr>
-              <?php endforeach; ?>
+              <?php else: ?>
+                <?php foreach ($active_cars as $c): ?>
+                  <tr>
+                    <td style="font-family:var(--font-mono); font-weight:700; color:var(--wheels-neon); font-size:0.75rem;">
+                      #<?php echo htmlspecialchars($c['stock_id'] ?: 'UW-' . $c['id']); ?>
+                    </td>
+                    <td>
+                      <div class="car-cell-flex">
+                        <div class="car-thumb-box">
+                          <img src="../assets/images/cars/<?php echo htmlspecialchars($c['image_file']); ?>" alt="" class="car-thumb-img" onerror="this.src='../assets/images/cars/car-1.png'">
+                        </div>
+                        <div>
+                          <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                            <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(196,21,46,0.2); color:var(--wheels-neon); text-transform:uppercase; font-family:var(--font-heading);"><?php echo htmlspecialchars($c['brand'] ?: 'UniWheels'); ?></span>
+                            <span style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);"><?php echo htmlspecialchars($c['body_type'] ?: 'Coupe'); ?></span>
+                          </div>
+                          <div class="car-name-title"><?php echo htmlspecialchars($c['name']); ?></div>
+                          <div class="car-wheel-subtitle"><?php echo htmlspecialchars($c['wheel_name']); ?></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <?php if ($c['price'] > 0): ?>
+                        <div style="font-family:var(--font-heading); font-weight:800; font-size:1rem; color:#fff;">
+                          ₱<?php echo number_format($c['price'], 0); ?>
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">
+                          Est. ₱<?php echo number_format(($c['price'] * 0.8 * (0.059/12) * pow(1 + 0.059/12, 60)) / (pow(1 + 0.059/12, 60) - 1), 0); ?>/mo
+                        </div>
+                      <?php else: ?>
+                        <div style="font-family:var(--font-heading); font-weight:800; font-size:0.88rem; color:#ffab00; letter-spacing:0.04em;">
+                          NEGOTIABLE
+                        </div>
+                        <div style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono); text-transform:uppercase;">
+                          Open for Offer
+                        </div>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <form method="POST" action="index.php?tab=cars" style="margin:0;">
+                        <input type="hidden" name="action" value="set_car_status">
+                        <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
+                        <select name="new_status" onchange="this.form.submit()" class="admin-status-select status-<?php echo strtolower($c['status']); ?>" title="Select status (Setting to SOLD archives this vehicle)">
+                          <option value="AVAILABLE" <?php echo $c['status'] === 'AVAILABLE' ? 'selected' : ''; ?>>● AVAILABLE</option>
+                          <option value="RESERVED" <?php echo $c['status'] === 'RESERVED' ? 'selected' : ''; ?>>● RESERVED</option>
+                          <option value="SOLD" <?php echo $c['status'] === 'SOLD' ? 'selected' : ''; ?>>● SOLD</option>
+                        </select>
+                      </form>
+                    </td>
+                    <td style="font-family:var(--font-mono); font-size:0.75rem;">
+                      <div><span style="color:var(--text-muted);">Mi:</span> <?php echo htmlspecialchars($c['mileage'] ?: 'Delivery Miles'); ?></div>
+                      <div><span style="color:var(--text-muted);">Trans:</span> <?php echo htmlspecialchars($c['transmission'] ?: 'Dual-Clutch'); ?></div>
+                      <div><span style="color:var(--text-muted);">Fuel:</span> <?php echo htmlspecialchars($c['fuel_type'] ?: 'Gasoline'); ?></div>
+                    </td>
+                    <td style="font-family:var(--font-mono); font-size:0.72rem;">
+                      <div><span style="color:var(--text-muted);">F:</span> <?php echo htmlspecialchars($c['front_fitment']); ?></div>
+                      <div><span style="color:var(--text-muted);">R:</span> <?php echo htmlspecialchars($c['rear_fitment']); ?></div>
+                      <div style="color:var(--text-sub);"><?php echo htmlspecialchars($c['finish']); ?></div>
+                    </td>
+                    <td style="text-align:right;">
+                      <div class="table-actions" style="justify-content:flex-end;">
+                        <button class="btn-table-action" onclick='openEditModal(<?php echo json_encode($c); ?>)'>Edit</button>
+                        <form method="POST" action="index.php?tab=cars" onsubmit="return confirm('Are you sure you want to permanently delete <?php echo addslashes($c['name']); ?>?');" style="display:inline;">
+                          <input type="hidden" name="action" value="delete_car">
+                          <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
+                          <button type="submit" class="btn-table-action delete">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
       </div>
     <?php endif; ?>
 
-    <!-- ================= TAB: CLIENT INQUIRIES & FORMS ================= -->
-    <?php if ($current_tab === 'inquiries'): ?>
+    <!-- ================= TAB: SOLD CARS ARCHIVE ================= -->
+    <?php if ($current_tab === 'sold'): ?>
       <div class="top-action-bar">
         <div class="page-title-box">
-          <h1>Client Inquiries & VIP Showroom Visits</h1>
-          <p>Review customer inquiries, face-to-face appointment bookings, vehicle acquisition requests, and dealership staff notes.</p>
-        </div>
-        <div class="top-actions">
-          <div class="live-preview-pill">
-            <span class="pulse-dot"></span>
-            <span>Total Leads: <strong><?php echo $inquiry_count; ?></strong></span>
-          </div>
-          <a href="../#inquirySection" target="_blank" class="btn btn-outline">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            <span>Live Consultation Form ↗</span>
-          </a>
+          <h1>Sold Vehicles Archive</h1>
+          <p>Archived vehicles that have been marked as SOLD. These vehicles are hidden from the public showroom and can be retracted back to the active fleet at any time.</p>
         </div>
       </div>
 
-      <!-- Filter Pills Bar -->
-      <div class="filter-pills-bar">
-        <a href="index.php?tab=inquiries&status=all" class="filter-pill-item <?php echo $filter_status === 'all' ? 'active' : ''; ?>">
-          <span>All Leads</span>
-          <span class="pill-count"><?php echo $inquiry_stats['total']; ?></span>
+      <!-- Fleet Subtabs: Active vs Sold -->
+      <div class="fleet-subtabs">
+        <a href="index.php?tab=cars" class="fleet-subtab-btn">
+          <span>Active Fleet</span>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.12); padding:2px 8px; border-radius:10px;"><?php echo count($active_cars); ?></span>
         </a>
-        <a href="index.php?tab=inquiries&status=new" class="filter-pill-item <?php echo $filter_status === 'new' ? 'active' : ''; ?>" style="<?php echo $inquiry_stats['new'] > 0 ? 'border-color:rgba(255,71,87,0.5);' : ''; ?>">
-          <span style="color:#ff6b81;">● New Leads</span>
-          <span class="pill-count" style="background:rgba(255,71,87,0.25); color:#ff8595;"><?php echo $inquiry_stats['new']; ?></span>
-        </a>
-        <a href="index.php?tab=inquiries&status=ongoing" class="filter-pill-item <?php echo $filter_status === 'ongoing' ? 'active' : ''; ?>">
-          <span style="color:#38bdf8;">● Ongoing Consultations</span>
-          <span class="pill-count"><?php echo $inquiry_stats['ongoing']; ?></span>
-        </a>
-        <a href="index.php?tab=inquiries&status=completed" class="filter-pill-item <?php echo $filter_status === 'completed' ? 'active' : ''; ?>">
-          <span style="color:#2ed573;">● Completed Deals</span>
-          <span class="pill-count"><?php echo $inquiry_stats['completed']; ?></span>
-        </a>
-        <a href="index.php?tab=inquiries&status=cancelled" class="filter-pill-item <?php echo $filter_status === 'cancelled' ? 'active' : ''; ?>">
-          <span style="color:var(--text-muted);">✕ Cancelled / Inactive</span>
-          <span class="pill-count"><?php echo $inquiry_stats['cancelled']; ?></span>
+        <a href="index.php?tab=sold" class="fleet-subtab-btn active">
+          <span>Sold Cars Archive</span>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.12); padding:2px 8px; border-radius:10px;"><?php echo count($sold_cars); ?></span>
         </a>
       </div>
 
-      <!-- Inquiries Main Table -->
       <div class="card-panel">
         <div class="card-panel-header">
           <div class="card-panel-title">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--wheels-crimson)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span>Inquiry Records & Customer Appointments (<?php echo count($filtered_inquiries); ?> Showing)</span>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--wheels-crimson)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Sold Vehicles (<?php echo count($sold_cars); ?> Archived)</span>
           </div>
           <div style="font-size:0.75rem; color:var(--text-sub);">
-            Use dropdown to transition status between <code>NEW</code> → <code>ONGOING</code> → <code>COMPLETED</code>
+            Sorted by transfer date (most recently sold first). Use "Retract to Fleet" to restore refunded or cancelled vehicles back to AVAILABLE.
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="padding:1.25rem 1.25rem 0 1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:1.25rem; flex-wrap:wrap;">
+            <div style="position:relative; flex:1; max-width:420px;">
+              <input type="text" id="soldFleetSearch" onkeyup="filterAdminFleetTable('soldFleetTable', this.value, 'soldMatchCount')" placeholder="Search sold vehicles by Stock ID, Marque, Model..." style="width:100%; padding:10px 14px 10px 38px; background:rgba(255,255,255,0.04); border:1px solid var(--border-subtle); border-radius:8px; color:#fff; font-size:0.85rem; font-family:var(--font-body); outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--wheels-crimson)'" onblur="this.style.borderColor='var(--border-subtle)'">
+              <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); pointer-events:none; opacity:0.4;" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); font-family:var(--font-mono);">
+              Showing <span id="soldMatchCount" style="color:var(--wheels-neon); font-weight:700;"><?php echo count($sold_cars); ?></span> of <?php echo count($sold_cars); ?> sold vehicles
+            </div>
           </div>
         </div>
 
         <div class="data-table-wrapper">
-          <table class="data-table">
+          <table class="data-table" id="soldFleetTable">
             <thead>
               <tr>
-                <th style="width:70px;">Lead Ref</th>
-                <th>Client Contact Information</th>
-                <th>Vehicle & Consultation Focus</th>
-                <th>Preferred Window</th>
-                <th>Customer Notes & Request</th>
-                <th>Status (Direct Transition)</th>
-                <th>Dealership Staff Notes</th>
-                <th>Received</th>
+                <th style="width:75px;">Stock ID</th>
+                <th>Vehicle & Marque</th>
+                <th>Sold / Listed Price</th>
+                <th>Status</th>
+                <th>Date Transferred / Sold</th>
+                <th>Specifications</th>
+                <th>Wheels & Fitment</th>
                 <th style="text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <?php if (empty($filtered_inquiries)): ?>
-                <tr>
-                  <td colspan="9" style="text-align:center; padding:3rem; color:var(--text-muted);">
-                    <div style="font-size:1.1rem; margin-bottom:6px; color:#fff;">No inquiries match the active filter.</div>
-                    <div style="font-size:0.82rem;">Submit a consultation request on the storefront or choose "All Leads" above.</div>
+              <?php if (empty($sold_cars)): ?>
+                <tr class="no-results-row">
+                  <td colspan="8" style="text-align:center; padding:3rem 1rem; color:var(--text-muted);">
+                    <div style="font-size:2rem; margin-bottom:8px; opacity:0.5;">🏷️</div>
+                    <div style="font-size:1rem; font-weight:600; color:#fff; margin-bottom:4px;">No Sold Vehicles Recorded</div>
+                    <div style="font-size:0.82rem;">When vehicles in the active fleet are set to "SOLD", they will automatically be archived here.</div>
                   </td>
                 </tr>
               <?php else: ?>
-                <?php foreach ($filtered_inquiries as $inq): ?>
+                <?php foreach ($sold_cars as $c): ?>
                   <tr>
-                    <td style="font-family:var(--font-mono); font-weight:700; color:var(--wheels-neon); font-size:0.8rem;">
-                      #INQ-<?php echo str_pad($inq['id'], 3, '0', STR_PAD_LEFT); ?>
+                    <td style="font-family:var(--font-mono); font-weight:700; color:var(--wheels-neon); font-size:0.75rem;">
+                      #<?php echo htmlspecialchars($c['stock_id'] ?: 'UW-' . $c['id']); ?>
                     </td>
                     <td>
-                      <div style="font-weight:700; color:#fff; font-size:0.95rem; margin-bottom:3px;">
-                        <?php echo htmlspecialchars($inq['name']); ?>
-                      </div>
-                      <div style="display:flex; flex-direction:column; gap:2px; font-size:0.78rem;">
-                        <a href="tel:<?php echo htmlspecialchars($inq['phone']); ?>" style="color:var(--wheels-neon); font-weight:600; display:inline-flex; align-items:center; gap:4px;">
-                          <span>📞</span> <?php echo htmlspecialchars($inq['phone']); ?>
-                        </a>
-                        <a href="mailto:<?php echo htmlspecialchars($inq['email']); ?>" style="color:var(--text-sub); display:inline-flex; align-items:center; gap:4px;">
-                          <span>✉️</span> <?php echo htmlspecialchars($inq['email']); ?>
-                        </a>
-                      </div>
-                    </td>
-                    <td>
-                      <div style="font-weight:700; color:#fff; font-size:0.88rem; margin-bottom:4px;">
-                        <?php echo htmlspecialchars($inq['vehicle_name']); ?>
-                      </div>
-                      <span class="role-badge-pill bespoke" style="font-size:0.68rem; padding:2px 8px;">
-                        <?php echo htmlspecialchars($inq['inquiry_type']); ?>
-                      </span>
-                    </td>
-                    <td>
-                      <div style="font-weight:600; color:#2ed573; font-size:0.82rem;">
-                        <?php echo htmlspecialchars($inq['preferred_date'] ?: 'Flexible Walk-in'); ?>
-                      </div>
-                      <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">
-                        Preferred Appointment
-                      </div>
-                    </td>
-                    <td>
-                      <div style="max-width:280px; font-size:0.82rem; color:var(--text-main); line-height:1.45; word-break:break-word;">
-                        <?php echo nl2br(htmlspecialchars($inq['message'] ?: 'No additional notes provided.')); ?>
-                      </div>
-                    </td>
-                    <td>
-                      <form method="POST" action="index.php?tab=inquiries" style="margin:0;">
-                        <input type="hidden" name="action" value="update_inquiry_status">
-                        <input type="hidden" name="id" value="<?php echo $inq['id']; ?>">
-                        <select name="status" onchange="this.form.submit()" class="status-select status-<?php echo strtolower($inq['status']); ?>" title="Change inquiry status">
-                          <option value="new" <?php echo $inq['status'] === 'new' ? 'selected' : ''; ?>>● NEW LEAD</option>
-                          <option value="ongoing" <?php echo $inq['status'] === 'ongoing' ? 'selected' : ''; ?>>● ONGOING</option>
-                          <option value="completed" <?php echo $inq['status'] === 'completed' ? 'selected' : ''; ?>>● COMPLETED</option>
-                          <option value="cancelled" <?php echo $inq['status'] === 'cancelled' ? 'selected' : ''; ?>>✕ CANCELLED</option>
-                        </select>
-                      </form>
-                    </td>
-                    <td>
-                      <div style="max-width:220px;">
-                        <?php if (!empty($inq['staff_notes'])): ?>
-                          <div style="font-size:0.8rem; color:var(--text-sub); line-height:1.4; background:rgba(0,0,0,0.3); padding:6px 10px; border-radius:6px; border:1px solid var(--border-subtle); margin-bottom:4px;">
-                            <?php echo htmlspecialchars($inq['staff_notes']); ?>
-                          </div>
-                        <?php else: ?>
-                          <span style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">No staff notes</span>
-                        <?php endif; ?>
+                      <div class="car-cell-flex">
+                        <div class="car-thumb-box">
+                          <img src="../assets/images/cars/<?php echo htmlspecialchars($c['image_file']); ?>" alt="" class="car-thumb-img" onerror="this.src='../assets/images/cars/car-1.png'">
+                        </div>
                         <div>
-                          <button type="button" class="btn-table-action" onclick='openInquiryModal(<?php echo htmlspecialchars(json_encode($inq), ENT_QUOTES, 'UTF-8'); ?>)' style="padding:3px 8px; font-size:0.7rem; color:var(--wheels-neon);">
-                            ✏️ Edit Notes
-                          </button>
+                          <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                            <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(196,21,46,0.2); color:var(--wheels-neon); text-transform:uppercase; font-family:var(--font-heading);"><?php echo htmlspecialchars($c['brand'] ?: 'UniWheels'); ?></span>
+                            <span style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);"><?php echo htmlspecialchars($c['body_type'] ?: 'Coupe'); ?></span>
+                          </div>
+                          <div class="car-name-title"><?php echo htmlspecialchars($c['name']); ?></div>
+                          <div class="car-wheel-subtitle"><?php echo htmlspecialchars($c['wheel_name']); ?></div>
                         </div>
                       </div>
                     </td>
-                    <td style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); white-space:nowrap;">
-                      <?php echo date('M d, Y', strtotime($inq['created_at'])); ?><br>
-                      <?php echo date('g:i A', strtotime($inq['created_at'])); ?>
+                    <td>
+                      <?php if ($c['price'] > 0): ?>
+                        <div style="font-family:var(--font-heading); font-weight:800; font-size:1rem; color:#fff;">
+                          ₱<?php echo number_format($c['price'], 0); ?>
+                        </div>
+                      <?php else: ?>
+                        <div style="font-family:var(--font-heading); font-weight:800; font-size:0.88rem; color:#ffab00; letter-spacing:0.04em;">
+                          NEGOTIABLE
+                        </div>
+                        <div style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono); text-transform:uppercase;">
+                          Open for Offer
+                        </div>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <span class="status-badge sold">
+                        ● SOLD
+                      </span>
+                    </td>
+                    <td style="font-family:var(--font-mono); font-size:0.78rem; color:#fff;">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--wheels-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <span><?php echo !empty($c['sold_at']) ? date('M d, Y h:i A', strtotime($c['sold_at'])) : 'Archived'; ?></span>
+                      </div>
+                    </td>
+                    <td style="font-family:var(--font-mono); font-size:0.75rem;">
+                      <div><span style="color:var(--text-muted);">Mi:</span> <?php echo htmlspecialchars($c['mileage'] ?: 'Delivery Miles'); ?></div>
+                      <div><span style="color:var(--text-muted);">Trans:</span> <?php echo htmlspecialchars($c['transmission'] ?: 'Dual-Clutch'); ?></div>
+                      <div><span style="color:var(--text-muted);">Fuel:</span> <?php echo htmlspecialchars($c['fuel_type'] ?: 'Gasoline'); ?></div>
+                    </td>
+                    <td style="font-family:var(--font-mono); font-size:0.72rem;">
+                      <div><span style="color:var(--text-muted);">F:</span> <?php echo htmlspecialchars($c['front_fitment']); ?></div>
+                      <div><span style="color:var(--text-muted);">R:</span> <?php echo htmlspecialchars($c['rear_fitment']); ?></div>
+                      <div style="color:var(--text-sub);"><?php echo htmlspecialchars($c['finish']); ?></div>
                     </td>
                     <td style="text-align:right;">
                       <div class="table-actions" style="justify-content:flex-end;">
-                        <button type="button" class="btn-table-action" onclick='openInquiryModal(<?php echo htmlspecialchars(json_encode($inq), ENT_QUOTES, 'UTF-8'); ?>)' title="View Full Details & Notes">
-                          Details
-                        </button>
-                        <a href="tel:<?php echo htmlspecialchars($inq['phone']); ?>" class="btn-table-action" style="padding:6px 8px;" title="Call Client">
-                          📞
-                        </a>
-                        <form method="POST" action="index.php?tab=inquiries" onsubmit="return confirm('Permanently delete inquiry file for <?php echo addslashes($inq['name']); ?>?');" style="margin:0;">
-                          <input type="hidden" name="action" value="delete_inquiry">
-                          <input type="hidden" name="id" value="<?php echo $inq['id']; ?>">
-                          <button type="submit" class="btn-table-action delete" title="Delete Inquiry Record" style="padding:6px 8px;">✕</button>
+                        <!-- Retract to Fleet Button -->
+                        <form method="POST" action="index.php?tab=sold" onsubmit="return confirm('Restore <?php echo addslashes($c['name']); ?> back to the Active Fleet?\n\nVehicle status will become AVAILABLE and it will immediately reappear in the public showroom catalog.');" style="display:inline;">
+                          <input type="hidden" name="action" value="retract_sold_car">
+                          <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
+                          <button type="submit" class="btn-table-action" style="padding:6px 12px; font-size:0.75rem; background:rgba(46,213,115,0.12); color:#2ed573; border-color:rgba(46,213,115,0.4); display:inline-flex; align-items:center; gap:5px;" title="Retract to Fleet (re-activates vehicle as AVAILABLE)">
+                            <span style="font-size:0.9rem;">↺</span> Retract to Fleet
+                          </button>
+                        </form>
+                        <button class="btn-table-action" onclick='openEditModal(<?php echo json_encode($c); ?>)'>Edit</button>
+                        <form method="POST" action="index.php?tab=sold" onsubmit="return confirm('Are you sure you want to permanently delete <?php echo addslashes($c['name']); ?>?');" style="display:inline;">
+                          <input type="hidden" name="action" value="delete_car">
+                          <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
+                          <button type="submit" class="btn-table-action delete">Delete</button>
                         </form>
                       </div>
                     </td>
@@ -2374,214 +2100,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
       <?php endif; ?>
     <?php endif; ?>
 
-    <!-- ================= TAB 4: RULES & ROLES ================= -->
-    <?php if ($current_tab === 'roles'): ?>
-      <div class="top-action-bar">
-        <div class="page-title-box">
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px; flex-wrap:wrap;">
-            <h1>Rules of Access & Role Architecture</h1>
-            <?php if ($current_user['role'] === 'admin'): ?>
-              <span class="role-badge-pill admin" style="margin-bottom:0; font-size:0.7rem; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Super Admin Edit Mode Active
-              </span>
-            <?php endif; ?>
-          </div>
-          <p>Super Administrator dynamic control of role titles, descriptions, and operational capabilities across UniWheels.</p>
-        </div>
-        <?php if ($current_user['role'] === 'admin'): ?>
-          <div class="top-actions">
-            <button type="button" class="btn btn-primary" onclick="openCreateRoleModal()">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              Add Custom Role
-            </button>
-          </div>
-        <?php endif; ?>
-      </div>
-
-      <!-- Dynamic Role Cards Grid -->
-      <div class="roles-grid">
-        <?php foreach ($roles_list as $r): 
-          $is_highlight = ($r['role_key'] === 'admin') ? 'highlight' : '';
-          $perms = array_filter(array_map('trim', explode("\n", $r['permissions'])));
-          $is_core = in_array($r['role_key'], ['admin', 'manager', 'employee', 'visitor']);
-        ?>
-        <div class="role-card <?php echo $is_highlight; ?>" style="display:flex; flex-direction:column; justify-content:space-between;">
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-              <span class="role-badge-pill <?php echo htmlspecialchars($r['badge'] ?: $r['role_key']); ?>" style="margin-bottom:0;">
-                Role: <?php echo htmlspecialchars($r['role_key']); ?>
-              </span>
-              <?php if ($current_user['role'] === 'admin'): ?>
-                <button type="button" class="btn-table-action" onclick='openEditRoleModal(<?php echo json_encode($r, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)' title="Quick Edit Role Specifications" style="padding:4px 8px; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; color:var(--wheels-neon); border-color:var(--border-red);">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  Edit
-                </button>
-              <?php endif; ?>
-            </div>
-
-            <h3 class="role-card-title"><?php echo htmlspecialchars($r['name']); ?></h3>
-            <p class="role-card-desc"><?php echo nl2br(htmlspecialchars($r['description'])); ?></p>
-            
-            <ul class="role-capabilities-list">
-              <?php foreach ($perms as $perm): 
-                $is_cross = (str_starts_with($perm, '✕') || stripos($perm, 'cannot') !== false || stripos($perm, 'restricted') !== false || stripos($perm, 'no admin') !== false);
-                $clean_text = preg_replace('/^[✕✓\s\-\*]+/', '', $perm);
-              ?>
-                <li>
-                  <?php if ($is_cross): ?>
-                    <span class="rule-cross">✕</span> <?php echo htmlspecialchars($clean_text); ?>
-                  <?php else: ?>
-                    <span class="rule-check">✓</span> <?php echo htmlspecialchars($clean_text); ?>
-                  <?php endif; ?>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-
-          <?php if ($current_user['role'] === 'admin'): ?>
-            <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.06); display:flex; gap:8px;">
-              <button type="button" class="btn btn-outline" onclick='openEditRoleModal(<?php echo json_encode($r, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)' style="flex:1; justify-content:center; font-size:0.78rem; padding:8px 12px; background:rgba(196,21,46,0.08); border-color:var(--border-red); color:#fff;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                Edit Role & Description
-              </button>
-              <?php if (!$is_core): ?>
-                <form method="POST" action="index.php?tab=roles" onsubmit="return confirm('Delete custom role \'<?php echo addslashes($r['name']); ?>\'?');" style="margin:0;">
-                  <input type="hidden" name="action" value="delete_role">
-                  <input type="hidden" name="role_id" value="<?php echo $r['id']; ?>">
-                  <button type="submit" class="btn-table-action delete" title="Delete custom role" style="padding:8px 10px;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
-                </form>
-              <?php endif; ?>
-            </div>
-          <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-      </div>
-
-      <!-- Permissions Matrix Table -->
-      <div class="card-panel">
-        <div class="card-panel-header">
-          <div class="card-panel-title">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--wheels-crimson)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            <span>Permission Matrix By Operational Role</span>
-          </div>
-        </div>
-
-        <div class="data-table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Operation / Capability</th>
-                <th style="color:var(--wheels-neon);">Super Admin</th>
-                <th style="color:#ffab00;">Fleet Manager</th>
-                <th style="color:#2ed573;">Sales Employee</th>
-                <th style="color:var(--text-muted);">Guest / Visitor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>View Vehicle Catalog & Fitment Data</td>
-                <td><span class="rule-check">✓ Full Access</span></td>
-                <td><span class="rule-check">✓ Full Access</span></td>
-                <td><span class="rule-check">✓ Full Access</span></td>
-                <td><span class="rule-check">✓ Public View</span></td>
-              </tr>
-              <tr>
-                <td>Create New Vehicle Record</td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Direct Image Upload to <code>assets/images/cars/</code></td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Edit Vehicle Specifications & Offsets</td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Delete Vehicle from Inventory</td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Toggle Recommended & Featured Showcases</td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-check">✓ Allowed</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Manage Employee User Accounts</td>
-                <td><span class="rule-check">✓ Full Provisioning</span></td>
-                <td><span style="color:#ffab00;">👁️ View Only</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Edit Roles, Descriptions & Rules</td>
-                <td><span class="rule-check">✓ Full Configuration</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-              <tr>
-                <td>Access Database Credentials & Configuration</td>
-                <td><span class="rule-check">✓ Root Access</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-                <td><span class="rule-cross">✕ Restricted</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Operational Rules Guide -->
-      <div class="guidelines-box">
-        <h3 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:1.25rem; display:flex; align-items:center; gap:8px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--wheels-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          Operational Guidelines & Best Practices
-        </h3>
-
-        <div class="guideline-item">
-          <div class="guideline-num">1</div>
-          <div class="guideline-text">
-            <h4>Image Transparent Cutout Quality</h4>
-            <p>For optimal presentation on the interactive storefront, always upload vehicles with transparent backgrounds (PNG, WebP). The dynamic hover spotlight creates an illuminated halo around transparent vehicle bodies while blurring neighboring cars.</p>
-          </div>
-        </div>
-
-        <div class="guideline-item">
-          <div class="guideline-num">2</div>
-          <div class="guideline-text">
-            <h4>Featured vs Recommended Badges</h4>
-            <p><strong>Featured</strong> cars appear in the prominent top hero slides and telemetry banner. <strong>Recommended</strong> wheels represent the performance team's verified fitment selections for that chassis.</p>
-          </div>
-        </div>
-
-        <div class="guideline-item">
-          <div class="guideline-num">3</div>
-          <div class="guideline-text">
-            <h4>Profile Avatar Standard</h4>
-            <p>In accordance with UniWheels executive minimal styling, all administrator and employee accounts display the standardized neutral silhouette avatar icon across all portals.</p>
-          </div>
-        </div>
-      </div>
-    <?php endif; ?>
-
   </main>
 
   <!-- ================= MODAL: ADD VEHICLE ================= -->
@@ -2608,8 +2126,8 @@ if (!in_array($current_tab, $allowed_tabs)) {
               </datalist>
             </div>
             <div class="form-group">
-              <label class="form-label" for="add_price">Price (₱ PHP) *</label>
-              <input type="number" step="1000" name="price" id="add_price" class="form-input" placeholder="e.g. 450000" value="250000" required>
+              <label class="form-label" for="add_price">Price (₱ PHP) <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(0 for Negotiable / Open for Offer)</span></label>
+              <input type="number" step="1000" name="price" id="add_price" class="form-input" placeholder="e.g. 0 or 450000" value="0">
             </div>
             <div class="form-group">
               <label class="form-label" for="add_stock_id">Stock Reference ID</label>
@@ -2665,13 +2183,11 @@ if (!in_array($current_tab, $allowed_tabs)) {
               <input type="text" name="fuel_type" id="add_fuel_type" class="form-input" placeholder="e.g. 4.0L Twin-Turbo V8 Hybrid" value="Twin-Turbo V8 Gasoline">
             </div>
             <div class="form-group">
-              <label class="form-label" for="add_status">Inventory Status</label>
+              <label class="form-label" for="add_status">Inventory Status *</label>
               <select name="status" id="add_status" class="form-select">
                 <option value="AVAILABLE">AVAILABLE (Active in public catalog)</option>
-                <option value="BESPOKE">BESPOKE (Custom Order)</option>
-                <option value="RECOMMENDED">RECOMMENDED</option>
-                <option value="SOLD">SOLD (Archived from public catalog)</option>
-                <option value="OUT OF STOCK">OUT OF STOCK</option>
+                <option value="RESERVED">RESERVED (Pending deal, public actions disabled)</option>
+                <option value="SOLD">SOLD (Archived to Sold Cars list)</option>
               </select>
             </div>
           </div>
@@ -2732,14 +2248,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
             </div>
           </div>
 
-          <!-- Hero Showcase Badge -->
-          <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" name="is_recommended" value="1" checked>
-              <span>★ Feature in <strong>Homepage Hero (Casino 3D Spin)</strong></span>
-            </label>
-          </div>
-
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
@@ -2770,8 +2278,8 @@ if (!in_array($current_tab, $allowed_tabs)) {
               <input type="text" name="brand" id="edit_brand" list="brandDatalist" class="form-input" required>
             </div>
             <div class="form-group">
-              <label class="form-label" for="edit_price">Price (₱ PHP) *</label>
-              <input type="number" step="1000" name="price" id="edit_price" class="form-input" required>
+              <label class="form-label" for="edit_price">Price (₱ PHP) <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(0 for Negotiable / Open for Offer)</span></label>
+              <input type="number" step="1000" name="price" id="edit_price" class="form-input" placeholder="e.g. 0 or 450000">
             </div>
             <div class="form-group">
               <label class="form-label" for="edit_stock_id">Stock Reference ID</label>
@@ -2827,13 +2335,11 @@ if (!in_array($current_tab, $allowed_tabs)) {
               <input type="text" name="fuel_type" id="edit_fuel_type" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label" for="edit_status">Inventory Status</label>
+              <label class="form-label" for="edit_status">Inventory Status *</label>
               <select name="status" id="edit_status" class="form-select">
                 <option value="AVAILABLE">AVAILABLE (Active in public catalog)</option>
-                <option value="BESPOKE">BESPOKE (Custom Order)</option>
-                <option value="RECOMMENDED">RECOMMENDED</option>
-                <option value="SOLD">SOLD (Archived from public catalog)</option>
-                <option value="OUT OF STOCK">OUT OF STOCK</option>
+                <option value="RESERVED">RESERVED (Pending deal, public actions disabled)</option>
+                <option value="SOLD">SOLD (Archived to Sold Cars list)</option>
               </select>
             </div>
           </div>
@@ -2889,13 +2395,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
               <span style="font-size:0.75rem; color:var(--text-muted);">Current Asset Preview:</span>
               <img id="edit_preview" src="" class="upload-preview-img" alt="Preview">
             </div>
-          </div>
-
-          <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" name="is_recommended" id="edit_is_recommended" value="1">
-              <span>★ Feature in <strong>Homepage Hero (Casino 3D Spin)</strong></span>
-            </label>
           </div>
 
         </div>
@@ -2966,208 +2465,9 @@ if (!in_array($current_tab, $allowed_tabs)) {
     </div>
   </div>
 
-  <!-- ================= MODAL: EDIT ROLE & DESCRIPTION ================= -->
-  <div class="modal-overlay" id="editRoleModal">
-    <div class="modal-dialog" style="max-width:620px;">
-      <div class="modal-header">
-        <h2 class="modal-title" style="display:flex; align-items:center; gap:10px;">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--wheels-neon)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          Edit Role & Operational Description
-        </h2>
-        <button class="modal-close" onclick="closeEditRoleModal()">&times;</button>
-      </div>
 
-      <form method="POST" action="index.php?tab=roles">
-        <input type="hidden" name="action" value="update_role">
-        <input type="hidden" name="role_id" id="edit_role_id">
 
-        <div class="modal-body">
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label" for="edit_role_key">Role Identifier (System Key)</label>
-              <input type="text" id="edit_role_key" class="form-input" readonly style="opacity:0.7; background:rgba(0,0,0,0.4); cursor:not-allowed;">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="edit_role_badge">Color Badge Style</label>
-              <select name="badge" id="edit_role_badge" class="form-select">
-                <option value="admin">Crimson / Admin Badge</option>
-                <option value="manager">Amber / Manager Badge</option>
-                <option value="employee">Green / Employee Badge</option>
-                <option value="visitor">Subtle / Visitor Badge</option>
-                <option value="bespoke">Purple / Bespoke Badge</option>
-              </select>
-            </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label" for="edit_role_name">Display Role Title</label>
-            <input type="text" name="name" id="edit_role_name" class="form-input" placeholder="e.g. Super Administrator" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="edit_role_description">Role Description & Operational Summary</label>
-            <textarea name="description" id="edit_role_description" class="form-input" rows="3" placeholder="Describe the authority, responsibilities, and access level of this role..." required></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="edit_role_permissions">
-              Capabilities & Permissions (One item per line)
-            </label>
-            <textarea name="permissions" id="edit_role_permissions" class="form-input" rows="6" placeholder="Create, Edit & Delete Vehicles&#10;Direct Image Uploads&#10;✕ Cannot delete staff accounts"></textarea>
-            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; line-height:1.4;">
-              💡 <strong>Format Tip:</strong> Each line becomes a bullet point in the role card. Lines containing "cannot", "restricted", or starting with "✕" will automatically display with a red ✕ cross icon. Other items display with a green ✓ checkmark.
-            </p>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeEditRoleModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Role Configuration</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ================= MODAL: CREATE ROLE ================= -->
-  <div class="modal-overlay" id="createRoleModal">
-    <div class="modal-dialog" style="max-width:620px;">
-      <div class="modal-header">
-        <h2 class="modal-title" style="display:flex; align-items:center; gap:10px;">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--wheels-neon)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Create New Operational Role
-        </h2>
-        <button class="modal-close" onclick="closeCreateRoleModal()">&times;</button>
-      </div>
-
-      <form method="POST" action="index.php?tab=roles">
-        <input type="hidden" name="action" value="create_role">
-
-        <div class="modal-body">
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label" for="create_role_key">System Key (slug)</label>
-              <input type="text" name="role_key" id="create_role_key" class="form-input" placeholder="e.g. technician, concierge" required pattern="[a-zA-Z0-9_\-]+">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="create_role_badge">Color Badge Style</label>
-              <select name="badge" id="create_role_badge" class="form-select">
-                <option value="employee">Green / Staff Badge</option>
-                <option value="manager">Amber / Manager Badge</option>
-                <option value="admin">Crimson / Admin Badge</option>
-                <option value="visitor">Subtle / Visitor Badge</option>
-                <option value="bespoke">Purple / Bespoke Badge</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="create_role_name">Display Role Title</label>
-            <input type="text" name="name" id="create_role_name" class="form-input" placeholder="e.g. Master Wheel Technician" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="create_role_description">Role Description & Operational Summary</label>
-            <textarea name="description" id="create_role_description" class="form-input" rows="3" placeholder="Describe the authority, responsibilities, and access level of this role..." required></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="create_role_permissions">
-              Capabilities & Permissions (One item per line)
-            </label>
-            <textarea name="permissions" id="create_role_permissions" class="form-input" rows="5" placeholder="Inspect Wheel Offsets & Specs&#10;Verify Wheel Balances & Torques&#10;✕ Cannot delete vehicles&#10;✕ Cannot modify employee accounts"></textarea>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeCreateRoleModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Role</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ================= MODAL: MANAGE INQUIRY & NOTES ================= -->
-  <div class="modal-overlay" id="inquiryModal">
-    <div class="modal-dialog" style="max-width:640px;">
-      <div class="modal-header">
-        <h2 class="modal-title" style="display:flex; align-items:center; gap:10px;">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--wheels-neon)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          <span id="modal_inq_title">Review Client Consultation</span>
-        </h2>
-        <button class="modal-close" onclick="closeInquiryModal()">&times;</button>
-      </div>
-
-      <form method="POST" action="index.php?tab=inquiries">
-        <input type="hidden" name="action" value="update_inquiry_notes">
-        <input type="hidden" name="id" id="modal_inq_id">
-
-        <div class="modal-body">
-          
-          <!-- Client Card Details -->
-          <div style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-              <div>
-                <h3 id="modal_inq_client_name" style="font-family:var(--font-heading); font-size:1.2rem; margin:0 0 4px 0; color:#fff;">--</h3>
-                <div style="font-size:0.82rem; color:var(--text-sub); display:flex; gap:14px; flex-wrap:wrap;">
-                  <span>📞 <a id="modal_inq_client_phone_link" href="#" style="color:var(--wheels-neon); font-weight:600;"><span id="modal_inq_client_phone">--</span></a></span>
-                  <span>✉️ <a id="modal_inq_client_email_link" href="#" style="color:var(--text-main);"><span id="modal_inq_client_email">--</span></a></span>
-                </div>
-              </div>
-              <span id="modal_inq_ref" style="font-family:var(--font-mono); font-size:0.75rem; color:var(--wheels-neon); font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,0.05); border:1px solid var(--border-subtle);">#INQ-000</span>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.8rem; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
-              <div>
-                <span style="color:var(--text-muted); display:block; font-size:0.7rem; text-transform:uppercase;">Vehicle of Interest:</span>
-                <strong id="modal_inq_vehicle" style="color:#fff;">--</strong>
-              </div>
-              <div>
-                <span style="color:var(--text-muted); display:block; font-size:0.7rem; text-transform:uppercase;">Consultation Format:</span>
-                <strong id="modal_inq_type" style="color:var(--wheels-neon);">--</strong>
-              </div>
-              <div style="grid-column: span 2;">
-                <span style="color:var(--text-muted); display:block; font-size:0.7rem; text-transform:uppercase;">Preferred Meeting Window:</span>
-                <span id="modal_inq_date" style="color:#2ed573; font-weight:600;">--</span>
-              </div>
-            </div>
-
-            <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
-              <span style="color:var(--text-muted); display:block; font-size:0.7rem; text-transform:uppercase; margin-bottom:4px;">Customer Inquiry Message:</span>
-              <p id="modal_inq_message" style="margin:0; font-size:0.82rem; color:var(--text-sub); line-height:1.45; background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:6px; word-break:break-word;">--</p>
-            </div>
-          </div>
-
-          <!-- Status Dropdown -->
-          <div class="form-group">
-            <label class="form-label" for="modal_inq_status">Update Consultation Workflow Status</label>
-            <select name="status" id="modal_inq_status" class="form-select">
-              <option value="new">● NEW LEAD (Pending Follow-up)</option>
-              <option value="ongoing">● ONGOING (Scheduled / Talking Face-to-Face)</option>
-              <option value="completed">● COMPLETED (Appointment / Deal Finalized)</option>
-              <option value="cancelled">✕ CANCELLED (Declined / Inactive)</option>
-            </select>
-          </div>
-
-          <!-- Dealership Internal Staff Notes -->
-          <div class="form-group">
-            <label class="form-label" for="modal_inq_notes">
-              Dealership Staff Notes & Consultation History
-            </label>
-            <textarea name="staff_notes" id="modal_inq_notes" class="form-input" rows="4" placeholder="Log details of your phone/WhatsApp call, showroom appointment slot, trade appraisal values, customer requirements..."></textarea>
-            <p style="font-size:0.72rem; color:var(--text-muted); margin-top:5px; line-height:1.4;">
-              💡 <strong>Internal Only:</strong> Notes are private to dealership staff (never shown to customer).
-            </p>
-          </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeInquiryModal()">Close</button>
-          <button type="submit" class="btn btn-primary">Save Notes & Update Status</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <script>
     // Modal Helpers
@@ -3199,7 +2499,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
       document.getElementById('edit_existing_image_file').value = car.image_file;
       document.getElementById('edit_image_file').value = car.image_file;
       document.getElementById('edit_preview').src = '../assets/images/cars/' + car.image_file;
-      document.getElementById('edit_is_recommended').checked = parseInt(car.is_recommended) === 1;
       
       document.getElementById('editCarModal').classList.add('active');
     }
@@ -3214,47 +2513,29 @@ if (!in_array($current_tab, $allowed_tabs)) {
       document.getElementById('createEmployeeModal').classList.remove('active');
     }
 
-    // Role Modals
-    function openEditRoleModal(role) {
-      document.getElementById('edit_role_id').value = role.id;
-      document.getElementById('edit_role_key').value = role.role_key;
-      document.getElementById('edit_role_name').value = role.name;
-      document.getElementById('edit_role_badge').value = role.badge || role.role_key || 'employee';
-      document.getElementById('edit_role_description').value = role.description;
-      document.getElementById('edit_role_permissions').value = role.permissions;
-      document.getElementById('editRoleModal').classList.add('active');
-    }
-    function closeEditRoleModal() {
-      document.getElementById('editRoleModal').classList.remove('active');
-    }
+    // Live Instant Search for Active Fleet & Sold Archive
+    function filterAdminFleetTable(tableId, query, countId) {
+      var table = document.getElementById(tableId);
+      if (!table) return;
+      var rows = table.querySelectorAll('tbody tr');
+      var q = (query || '').toLowerCase().trim();
+      var matchCount = 0;
+      
+      rows.forEach(function(row) {
+        if (row.classList.contains('no-results-row')) return;
+        var text = row.innerText.toLowerCase();
+        if (!q || text.indexOf(q) !== -1) {
+          row.style.display = '';
+          matchCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
 
-    function openCreateRoleModal() {
-      document.getElementById('createRoleModal').classList.add('active');
-    }
-    function closeCreateRoleModal() {
-      document.getElementById('createRoleModal').classList.remove('active');
-    }
-
-    // Inquiry & Notes Modal
-    function openInquiryModal(inq) {
-      document.getElementById('modal_inq_id').value = inq.id;
-      document.getElementById('modal_inq_ref').textContent = '#INQ-' + String(inq.id).padStart(3, '0');
-      document.getElementById('modal_inq_client_name').textContent = inq.name;
-      document.getElementById('modal_inq_client_phone').textContent = inq.phone;
-      document.getElementById('modal_inq_client_phone_link').href = 'tel:' + inq.phone;
-      document.getElementById('modal_inq_client_email').textContent = inq.email;
-      document.getElementById('modal_inq_client_email_link').href = 'mailto:' + inq.email;
-      document.getElementById('modal_inq_vehicle').textContent = inq.vehicle_name;
-      document.getElementById('modal_inq_type').textContent = inq.inquiry_type;
-      document.getElementById('modal_inq_date').textContent = inq.preferred_date || 'Flexible / Walk-in';
-      document.getElementById('modal_inq_message').textContent = inq.message || 'No additional specifications provided.';
-      document.getElementById('modal_inq_status').value = inq.status || 'new';
-      document.getElementById('modal_inq_notes').value = inq.staff_notes || '';
-
-      document.getElementById('inquiryModal').classList.add('active');
-    }
-    function closeInquiryModal() {
-      document.getElementById('inquiryModal').classList.remove('active');
+      if (countId) {
+        var countEl = document.getElementById(countId);
+        if (countEl) countEl.textContent = matchCount;
+      }
     }
 
     // Dynamic Image Previews
@@ -3278,9 +2559,6 @@ if (!in_array($current_tab, $allowed_tabs)) {
         closeCreateModal();
         closeEditModal();
         closeEmployeeModal();
-        closeEditRoleModal();
-        closeCreateRoleModal();
-        closeInquiryModal();
       }
     });
   </script>

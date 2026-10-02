@@ -55,6 +55,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // 1b. Luxury Supercar Cockpit Light / Dark Theme Mode Controller
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+  function getSavedTheme() {
+    try {
+      const saved = localStorage.getItem('uniwheels_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch (e) {}
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return 'dark';
+  }
+
+  function applyThemeMode(theme, save) {
+    const isDark = theme !== 'light';
+    const activeTheme = isDark ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    
+    if (save) {
+      try {
+        localStorage.setItem('uniwheels_theme', activeTheme);
+      } catch (e) {}
+    }
+
+    if (themeToggleBtn) {
+      themeToggleBtn.setAttribute('aria-checked', isDark ? 'true' : 'false');
+      themeToggleBtn.setAttribute('aria-label', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+      themeToggleBtn.setAttribute('title', isDark ? 'Currently Dark Mode — Click for Light Mode' : 'Currently Light Mode — Click for Dark Mode');
+    }
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const targetTheme = current === 'light' ? 'dark' : 'light';
+      applyThemeMode(targetTheme, true);
+    });
+  }
+
+  // Initial Sync
+  applyThemeMode(getSavedTheme(), false);
+
   // 2. Select Elements
   const carSelectInput = document.getElementById('selectedCarInput');
   const inquirySection = document.getElementById('inquirySection');
@@ -111,7 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr><td style="padding:4px 0; color:var(--text-muted);">Bolt Pattern:</td><td style="color:#fff; font-weight:600; text-align:right;">${car.specs.boltPattern}</td></tr>
           </table>
           <div style="margin-top:1.5rem; display:flex; gap:10px;">
-            <button class="btn-side-inquire" onclick="selectCarForInquiry('${carId}'); closeSpecsModal();" style="width:100%; justify-content:center;">Inquire This Build</button>
+            <button class="btn-card-messenger" onclick="inquireMessengerLead({name: '${car.name}', stock_id: '${car.modelCode}'}); closeSpecsModal();" style="width:100%; justify-content:center;">
+              <svg viewBox="0 0 28 28" width="16" height="16" fill="currentColor">
+                <path d="M14 2C7.373 2 2 6.945 2 13.045c0 3.477 1.745 6.577 4.473 8.577V26l4.24-2.327c1.045.291 2.155.455 3.287.455 6.627 0 12-4.945 12-11.045S20.627 2 14 2zm1.2 14.882l-3.073-3.282-6 3.282 6.6-7.009 3.145 3.282 5.928-3.282-6.6 7.009z"/>
+              </svg>
+              <span>Inquire via Messenger</span>
+            </button>
           </div>
         </div>
       </div>
@@ -274,82 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // Update HUD
-      updateHud();
-    }
-
-    function updateHud() {
-      const activeCar = casinoItems[currentIndex];
-      if (!activeCar || !activeHud) return;
-
-      const d = activeCar.dataset;
-      const padNum = String(currentIndex + 1).padStart(2, '0');
-      const totalNum = String(total).padStart(2, '0');
-
-      const elCur = document.getElementById('hudCurrentNum');
-      const elTot = document.getElementById('hudTotalNum');
-      const elTitle = document.getElementById('hudCarTitle');
-      const elWheel = document.getElementById('hudWheelTitle');
-      const elStat = document.getElementById('hudStatusBadge');
-      const elFront = document.getElementById('hudFront');
-      const elRear = document.getElementById('hudRear');
-      const elFinish = document.getElementById('hudFinish');
-      const elAlloy = document.getElementById('hudAlloy');
-      const elWeight = document.getElementById('hudWeight');
-
-      if (elCur) elCur.textContent = padNum;
-      if (elTot) elTot.textContent = totalNum;
-      if (elTitle) elTitle.textContent = d.name || '';
-      if (elWheel) elWheel.textContent = d.wheel || '';
-      if (elStat) elStat.textContent = `● ${(d.status || 'AVAILABLE').toUpperCase()}`;
-      if (elFront) elFront.textContent = d.front || '-';
-      if (elRear) elRear.textContent = d.rear || '-';
-      if (elFinish) elFinish.textContent = d.finish || '-';
-      if (elAlloy) elAlloy.textContent = d.alloy || '-';
-      if (elWeight) elWeight.textContent = d.weight || '-';
-
-      const elPrice = document.getElementById('hudPriceBadge');
-      const elStock = document.getElementById('hudStockSub');
-      if (elPrice) {
-        const pNum = parseFloat(d.price) || 0;
-        elPrice.textContent = pNum > 0 ? `₱${pNum.toLocaleString('en-US')}` : '₱ Valuation';
-      }
-      if (elStock) {
-        elStock.textContent = `STOCK #${(d.stock || ('UW-' + d.id)).toUpperCase()}`;
-      }
-
-      const inqBtn = document.getElementById('hudInquireBtn');
-      if (inqBtn) {
-        inqBtn.onclick = () => {
-          selectCarForInquiry(d.name);
-        };
-      }
-
-      const messengerBtn = document.getElementById('hudMessengerBtn');
-      if (messengerBtn) {
-        messengerBtn.onclick = () => {
-          inquireMessengerLead({
-            name: d.name,
-            stock_id: d.stock || ('UW-' + d.id),
-            price: d.price || 0,
-            mileage: d.mileage || 'Delivery Miles',
-            transmission: d.transmission || 'Dual-Clutch DCT'
-          });
-        };
-      }
-
-      const financeBtn = document.getElementById('hudFinanceBtn');
-      if (financeBtn) {
-        financeBtn.onclick = () => {
-          openFinancialCalculator({
-            id: d.id,
-            name: d.name,
-            stock_id: d.stock || ('UW-' + d.id),
-            price: d.price || 0,
-            mileage: d.mileage || 'Delivery Miles'
-          });
-        };
-      }
+      // Dot indicators updated
     }
 
     // Attach Event Listeners
@@ -362,8 +337,14 @@ document.addEventListener('DOMContentLoaded', () => {
           e.stopPropagation();
           goTo(idx);
         } else {
-          // Clicking center car selects it for inquiry
-          selectCarForInquiry(item.dataset.name);
+          // Center car clicked: filter catalog to this brand and scroll to inventory
+          const brand = item.dataset.brand;
+          if (typeof filterBrand !== 'undefined' && filterBrand && brand) {
+            filterBrand.value = brand.toLowerCase();
+            if (typeof applyCatalogFilters === 'function') applyCatalogFilters();
+          }
+          const catalogSec = document.getElementById('inventoryCatalogSection');
+          if (catalogSec) catalogSec.scrollIntoView({ behavior: 'smooth' });
         }
       });
     });
@@ -439,148 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePositions();
   }
 
-  // 6. Pill Selectors & Consultation Types
-  const inquiryTypePills = document.querySelectorAll('#inquiryTypeSelector .pill-option');
-  const inquiryTypeInput = document.getElementById('inquiryTypeInput');
-  inquiryTypePills.forEach(pill => {
-    pill.addEventListener('click', function() {
-      inquiryTypePills.forEach(p => p.classList.remove('active'));
-      this.classList.add('active');
-      if (inquiryTypeInput) {
-        inquiryTypeInput.value = this.dataset.value || this.textContent.trim();
-      }
-    });
-  });
 
-  // 7. Quick Date Suggestions
-  const quickDatePills = document.querySelectorAll('#quickDatePills .pill-option');
-  const preferredDateInput = document.getElementById('preferredDate');
-  quickDatePills.forEach(pill => {
-    pill.addEventListener('click', function(e) {
-      e.preventDefault();
-      quickDatePills.forEach(p => p.classList.remove('active'));
-      this.classList.add('active');
-      if (preferredDateInput) {
-        preferredDateInput.value = this.dataset.date || this.textContent.trim();
-        preferredDateInput.focus();
-      }
-    });
-  });
-
-  // General fallback pill selectors
-  document.querySelectorAll('.pill-selector:not(#inquiryTypeSelector):not(#quickDatePills) .pill-option').forEach(pill => {
-    pill.addEventListener('click', function() {
-      const parent = this.parentElement;
-      parent.querySelectorAll('.pill-option').forEach(p => p.classList.remove('active'));
-      this.classList.add('active');
-
-      const targetInputId = parent.dataset.targetInput;
-      if (targetInputId) {
-        const input = document.getElementById(targetInputId);
-        if (input) input.value = this.dataset.value || this.textContent.trim();
-      }
-    });
-  });
-
-  // 8. Form Submission via AJAX to submit-inquiry.php
-  const inquiryForm = document.getElementById('inquiryForm');
-  const statusFeedback = document.getElementById('inquiryStatusFeedback');
-
-  if (inquiryForm) {
-    inquiryForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalBtnHTML = submitBtn.innerHTML;
-      submitBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" class="spin-icon">
-          <circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle>
-          <path d="M12 2a10 10 0 0 1 10 10"></path>
-        </svg>
-        <span>Securing Appointment...</span>
-      `;
-      submitBtn.disabled = true;
-
-      const actionUrl = inquiryForm.getAttribute('action') || 'submit-inquiry.php';
-      const formData = new FormData(inquiryForm);
-
-      // Ensure inquiry type is populated
-      if (!formData.get('inquiry_type') && inquiryTypeInput) {
-        formData.append('inquiry_type', inquiryTypeInput.value);
-      }
-
-      fetch(actionUrl, {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        submitBtn.innerHTML = originalBtnHTML;
-        submitBtn.disabled = false;
-
-        if (data.success) {
-          const clientName = formData.get('client_name') || 'Valued Client';
-          const vehicle = formData.get('selected_car') || 'Showroom Vehicle';
-          const leadId = data.lead_id || 'NEW';
-
-          if (statusFeedback) {
-            statusFeedback.style.display = 'block';
-            statusFeedback.style.background = 'rgba(46, 213, 115, 0.12)';
-            statusFeedback.style.border = '1px solid #2ed573';
-            statusFeedback.style.color = '#fff';
-            statusFeedback.innerHTML = `
-              <div style="display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:rgba(46, 213, 115, 0.2); border:1px solid #2ed573; display:flex; align-items:center; justify-content:center; color:#2ed573; font-weight:800; flex-shrink:0;">
-                  ✓
-                </div>
-                <div>
-                  <div style="font-family:var(--font-heading); font-size:1.05rem; font-weight:800; color:#2ed573; margin-bottom:4px;">
-                    Showroom Consultation Request Confirmed!
-                  </div>
-                  <p style="margin:0 0 6px 0; color:var(--text-sub); font-size:0.85rem; line-height:1.45;">
-                    Thank you, <strong>${clientName}</strong>! Your inquiry regarding <strong>${vehicle}</strong> has been logged to the Executive Dealer Suite.
-                  </p>
-                  <div style="font-size:0.75rem; color:var(--wheels-neon); font-family:var(--font-mono);">
-                    Lead File Ref: #LEAD-${leadId} · Status: Ongoing Appointment Review
-                  </div>
-                </div>
-              </div>
-            `;
-            statusFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-
-          showToast(`Inquiry #LEAD-${leadId} logged! Dealership concierge will call shortly.`);
-          inquiryForm.reset();
-        } else {
-          if (statusFeedback) {
-            statusFeedback.style.display = 'block';
-            statusFeedback.style.background = 'rgba(255, 71, 87, 0.12)';
-            statusFeedback.style.border = '1px solid #ff4757';
-            statusFeedback.style.color = '#fff';
-            statusFeedback.innerHTML = `
-              <div style="display:flex; align-items:center; gap:10px;">
-                <span style="color:#ff4757; font-size:1.2rem; font-weight:800;">✕</span>
-                <span style="color:#ff6b81; font-weight:600;">${data.message || 'Unable to submit consultation request. Please try again.'}</span>
-              </div>
-            `;
-          }
-          showToast(data.message || 'Submission error. Please check your contact fields.');
-        }
-      })
-      .catch(err => {
-        submitBtn.innerHTML = originalBtnHTML;
-        submitBtn.disabled = false;
-        if (statusFeedback) {
-          statusFeedback.style.display = 'block';
-          statusFeedback.style.background = 'rgba(255, 71, 87, 0.12)';
-          statusFeedback.style.border = '1px solid #ff4757';
-          statusFeedback.style.color = '#ff6b81';
-          statusFeedback.textContent = 'Network or server error communicating with dealership database. Please contact us directly.';
-        }
-        showToast('Network error submitting inquiry.');
-      });
-    });
-  }
 
   // 9. Toast Helper
   function showToast(msg) {
@@ -738,49 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.open(messengerUrl, '_blank');
   };
 
-  window.applyFinancingToShowroomForm = function() {
-    closeFinancialCalculator();
-    const car = currentCalcCar || {};
-    if (car.name) {
-      selectCarForInquiry(car.name);
-    }
-    const msgBox = document.getElementById('clientMessage');
-    const elMonthly = document.getElementById('gaugeMonthlyDisplay');
-    const priceInput = document.getElementById('calcVehiclePrice');
-    const dpSlider = document.getElementById('calcDpSlider');
 
-    const price = priceInput ? Number(priceInput.value).toLocaleString('en-US') : '';
-    const dpPct = dpSlider ? dpSlider.value : '20';
-    const monthly = elMonthly ? elMonthly.textContent : '';
-
-    if (msgBox) {
-      msgBox.value = `Financing Discussion Requested:\nEstimated Acquisition Price: ₱${price}\nDown Payment: ${dpPct}%\nAmortization Term: ${currentCalcTerm} Months (${monthly}/month)\n\nLooking to schedule an in-person showroom visit to inspect the vehicle and finalize acquisition terms.`;
-      msgBox.focus();
-    }
-  };
-
-  window.selectCarForConsultation = function(carName) {
-    selectCarForInquiry(carName);
-  };
-
-  function selectCarForInquiry(carName) {
-    if (carSelectInput) {
-      let optionFound = false;
-      for (let i = 0; i < carSelectInput.options.length; i++) {
-        if (carSelectInput.options[i].text.includes(carName) || carName.includes(carSelectInput.options[i].text)) {
-          carSelectInput.selectedIndex = i;
-          optionFound = true;
-          break;
-        }
-      }
-      if (!optionFound && carSelectInput.tagName === 'INPUT') {
-        carSelectInput.value = carName;
-      }
-    }
-    if (inquirySection) {
-      inquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
 
   // ========================================================
   // 12. DYNAMIC INVENTORY SEARCH & FILTERS (FLOWCHART FEATURE #1)
