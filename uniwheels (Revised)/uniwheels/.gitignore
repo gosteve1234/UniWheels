@@ -1,0 +1,14 @@
+# Holds WordPress's secret keys. Each computer makes its own from wp-config-sample.php (see README.md).
+wp-config.php
+
+# WordPress temporary files
+wp-content/upgrade/
+wp-content/cache/
+*.log
+
+# Windows / editor clutter
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
