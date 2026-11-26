@@ -297,7 +297,7 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
   <?php if (!$is_new): ?><input type="hidden" name="id" value="<?= (int) $car['id'] ?>"><?php endif; ?>
 
   <section class="form-section">
-    <h2>Photos <span class="required">required</span></h2>
+    <h2>Photos</h2>
     <p class="hint">Upload exterior, interior, trunk, dashboard, tires, and damage close-up photos. Photos are automatically compressed for fast mobile loading.</p>
     <?php field_error($errors, 'photos'); ?>
 
@@ -329,7 +329,7 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
   </section>
 
   <section class="form-section">
-    <h2>About the car <span class="required">required</span></h2>
+    <h2>About the car</h2>
 
     <div class="field">
       <label for="name">Car name <span class="required">required</span></label>
@@ -384,7 +384,7 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
 
   <!-- Requirement F: More details are REQUIRED (never optional or hidden) -->
   <section class="form-section">
-    <h2>More details <span class="required">required</span></h2>
+    <h2>More details</h2>
 
     <div class="field-row-2">
       <div class="field">
@@ -452,7 +452,7 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
 
   <!-- Requirement A: Vehicle Condition, Ownership History & Policies -->
   <section class="form-section">
-    <h2>Vehicle Condition, History &amp; Policy <span class="required">required</span></h2>
+    <h2>Vehicle Condition, History &amp; Policy</h2>
 
     <div class="field">
       <label for="ownership_history">Ownership history <span class="required">required</span></label>
@@ -492,12 +492,25 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
   <section class="danger-zone">
     <h2>Remove this car</h2>
     <p>Takes the car off the website. You can bring it back with <strong>Undo</strong> right after.</p>
-    <form method="post" action="index.php">
+    <form method="post" action="index.php" id="remove-car-form">
       <?= csrf_field() ?>
       <input type="hidden" name="id" value="<?= (int) $car['id'] ?>">
-      <button type="submit" name="action" value="remove" class="btn btn-danger">Remove this car</button>
+      <input type="hidden" name="action" value="remove">
+      <button type="submit" class="btn btn-danger" id="remove-car-trigger">Remove this car</button>
     </form>
   </section>
+
+  <div class="confirm-modal" id="remove-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="remove-modal-title" hidden>
+    <div class="confirm-modal-backdrop" data-close-modal></div>
+    <div class="confirm-modal-box">
+      <h2 id="remove-modal-title">Remove this car unit?</h2>
+      <p>Are you sure you want to remove <strong><?= h($form['name']) ?></strong> from the website? You can cancel if you are not sure, or confirm to remove this unit.</p>
+      <div class="confirm-modal-actions">
+        <button type="button" class="btn btn-light" id="remove-cancel-btn" data-close-modal>Cancel</button>
+        <button type="button" class="btn btn-danger confirm-danger-solid" id="remove-confirm-btn">Yes, remove unit</button>
+      </div>
+    </div>
+  </div>
 <?php endif; ?>
 
 <script>

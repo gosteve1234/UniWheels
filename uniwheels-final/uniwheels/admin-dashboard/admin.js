@@ -227,3 +227,50 @@
     saveBtn.textContent = 'Saving…';
   });
 })();
+
+/* Confirmation prompt before removing a car unit. */
+(function () {
+  var removeForm = document.getElementById('remove-car-form');
+  var modal = document.getElementById('remove-confirm-modal');
+  if (!removeForm || !modal) return;
+
+  var cancelBtn = document.getElementById('remove-cancel-btn');
+  var confirmBtn = document.getElementById('remove-confirm-btn');
+  var triggerBtn = document.getElementById('remove-car-trigger');
+  var confirmed = false;
+
+  function openModal() {
+    modal.hidden = false;
+    if (cancelBtn) cancelBtn.focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    if (triggerBtn) triggerBtn.focus();
+  }
+
+  removeForm.addEventListener('submit', function (e) {
+    if (confirmed) return;
+    e.preventDefault();
+    openModal();
+  });
+
+  modal.querySelectorAll('[data-close-modal]').forEach(function (el) {
+    el.addEventListener('click', closeModal);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modal.hidden) {
+      closeModal();
+    }
+  });
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', function () {
+      confirmed = true;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Removing…';
+      removeForm.submit();
+    });
+  }
+})();
