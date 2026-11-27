@@ -26,8 +26,8 @@ $cars_img_url = '../assets/images/cars/';
 const CAR_STATUSES = [
     'AVAILABLE'   => 'For sale (Available)',
     'RESERVED'    => 'Reserved',
-    'RENTED'      => 'Rented',
     'MAINTENANCE' => 'Under maintenance',
+    'TRADED'      => 'Traded',
     'SOLD'        => 'Sold',
 ];
 const SOLD_STATUSES = ['SOLD', 'OUT OF STOCK'];
@@ -132,14 +132,19 @@ function attention_items($pdo) {
     $cars = $pdo->query("SELECT * FROM cars WHERE deleted_at IS NULL ORDER BY id DESC")->fetchAll();
     foreach ($cars as $car) {
         $status = strtoupper($car['status']);
-        if (in_array($status, SOLD_STATUSES, true)) {
+        if (in_array($status, SOLD_STATUSES, true) || $status === 'TRADED') {
             continue;
         }
         $days_listed = (int) floor((time() - strtotime($car['created_at'])) / 86400);
-        if ($status === 'RESERVED' && !empty($car['reserved_at'])) {
-            $days_reserved = (int) floor((time() - strtotime($car['reserved_at'])) / 86400);
-            if ($days_reserved > RESERVED_DAYS) {
-                $items[] = [$car, "has been reserved for $days_reserved days. Did the buyer confirm?"];
+        if ($status === 'RESERVED') {
+            if (!empty($car['reserve_expires_at']) && strtotime($car['reserve_expires_at']) <= time()) {
+                $expLabel = date('M j, g:i A', strtotime($car['reserve_expires_at']));
+                $items[] = [$car, "reservation period ended on {$expLabel}. If the buyer hasn't visited, click End Reservation.", 'index.php?show=reserved'];
+            } elseif (empty($car['reserve_expires_at']) && !empty($car['reserved_at'])) {
+                $days_reserved = (int) floor((time() - strtotime($car['reserved_at'])) / 86400);
+                if ($days_reserved > RESERVED_DAYS) {
+                    $items[] = [$car, "has been reserved for $days_reserved days. Did the buyer confirm?", 'index.php?show=reserved'];
+                }
             }
         } elseif ($status === 'AVAILABLE' && $days_listed > SLOW_DAYS) {
             $items[] = [$car, "has been for sale $days_listed days. Consider lowering the price."];
@@ -190,8 +195,12 @@ function page_start($title, $active = '') {
             <p class="alerts-empty">All good. Nothing to check right now.</p>
           <?php else: ?>
             <ul>
-              <?php foreach ($alerts as [$car, $sentence]): ?>
-                <li><a href="car.php?id=<?= (int) $car['id'] ?>"><strong><?= h($car['name']) ?></strong> <?= h($sentence) ?></a></li>
+              <?php foreach ($alerts as $alert):
+                $car = $alert[0];
+                $sentence = $alert[1];
+                $alertUrl = $alert[2] ?? ('car.php?id=' . (int) $car['id']);
+              ?>
+                <li><a href="<?= h($alertUrl) ?>"><strong><?= h($car['name']) ?></strong> <?= h($sentence) ?></a></li>
               <?php endforeach; ?>
             </ul>
           <?php endif; ?>

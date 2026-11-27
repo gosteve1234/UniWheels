@@ -245,6 +245,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .flash form { margin: 0; }
 .notice { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border-radius: 12px; font-weight: 600; }
 .notice-error { background: #fef2f2; border: 2px solid #fca5a5; border-left: 8px solid var(--danger); color: #7f1d1d; }
+.notice-warning { background: #fffbeb; border: 2px solid #fcd34d; border-left: 8px solid #d97706; color: #78350f; }
 .empty {
   padding: 2.5rem 1.5rem;
   background: var(--card);
@@ -310,6 +311,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .badge-rented { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
 .badge-maintenance { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
 .badge-sold { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.badge-traded { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
 .car-body { padding: 1.1rem 1.25rem .5rem; flex: 1; }
 .car-name { font-size: 1.25rem; margin: 0 0 .3rem; line-height: 1.3; }
 .car-price { font-family: var(--heading); font-size: 1.5rem; font-weight: 800; color: var(--navy); margin: 0 0 .35rem; }
@@ -323,6 +325,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   color: #78350f;
   font-size: .86rem;
   line-height: 1.4;
+}
+.reservation-box.is-expired {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #7f1d1d;
+}
+.expired-label {
+  color: var(--danger);
 }
 .car-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: .75rem 1.25rem 1.25rem; }
 .car-actions form { margin: 0; display: grid; }
@@ -375,9 +385,8 @@ textarea { min-height: 112px; padding: .75rem .95rem; resize: vertical; }
 input::placeholder, textarea::placeholder { color: #64748b; }
 input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, .12); outline: none; }
 input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--danger); }
-.required, .optional { font-size: .85rem; font-weight: 600; margin-left: .35rem; font-family: 'Inter', sans-serif; }
-.required { color: var(--danger); }
-.optional { color: var(--muted); }
+.required { color: var(--danger); font-size: 1.05rem; font-weight: 700; margin-left: .18rem; line-height: 1; }
+.optional { font-size: .85rem; font-weight: 600; margin-left: .35rem; font-family: 'Inter', sans-serif; color: var(--muted); }
 .hint { color: var(--muted); }
 .field-error { color: var(--danger); font-weight: 700; margin: .35rem 0 0; }
 
@@ -598,3 +607,139 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 @media (max-width: 640px) {
   .confirm-modal-actions .btn { flex: 1 1 100%; }
 }
+
+/* Staff Reserve modal */
+.reserve-modal-box {
+  border-top-color: var(--primary);
+  max-width: 520px;
+}
+.reserve-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .25rem;
+}
+.reserve-modal-head h2 { margin: 0; }
+.reserve-modal-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: .2rem .4rem;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.reserve-modal-close:hover { background: var(--bg); color: var(--text); }
+.reserve-car-subtitle {
+  margin: 0 0 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.hold-duration-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .5rem;
+}
+.hold-pill {
+  min-height: 46px;
+  padding: .5rem .6rem;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--body);
+  font: inherit;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hold-pill:hover { border-color: var(--primary); color: var(--primary-dark); }
+.hold-pill.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+.reserve-deposit-note {
+  margin: 0 0 1.1rem;
+  font-size: .9rem;
+}
+@media (max-width: 640px) {
+  .hold-duration-pills { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Staff Sold / Trade wizard modal */
+.sold-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+  margin-bottom: 1rem;
+}
+.sold-choice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: .85rem 1rem;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s, background-color .15s;
+}
+.sold-choice-card:hover {
+  border-color: var(--primary);
+}
+.sold-choice-card.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.sold-choice-card input[type="radio"] {
+  width: 22px;
+  height: 22px;
+  margin-top: .1rem;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+.sold-choice-title {
+  display: block;
+  font-weight: 700;
+  color: var(--text);
+}
+.sold-choice-sub {
+  display: block;
+  font-size: .88rem;
+  color: var(--muted);
+}
+.sold-summary-box {
+  padding: .9rem 1rem;
+  margin-bottom: 1.25rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.sold-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .94rem;
+}
+.sold-summary-row:last-child { border-bottom: none; }
+.trade-info-box {
+  margin-top: .5rem;
+  padding: .55rem .75rem;
+  border-radius: 10px;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #4c1d95;
+  font-size: .86rem;
+  line-height: 1.4;
+}
+.trade-date-header {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  border-left-color: #6d28d9;
+}
+.trade-date-header h3 { color: #4c1d95; }
+.trade-date-header .sold-date-summary { color: #5b21b6; }

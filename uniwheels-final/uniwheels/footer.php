@@ -82,7 +82,7 @@ $uw_esc = fn($s) => htmlspecialchars((string) ($s ?? ''), ENT_QUOTES, 'UTF-8');
             </div>
           </div>
           <p class="footer-about-text">
-            Pre-owned vehicles and rentals with transparent condition reports, verified papers, and hassle-free reservations.
+            Certified pre-owned vehicles with transparent condition reports, verified papers, and hassle-free showroom visits.
           </p>
         </div>
 
@@ -144,17 +144,6 @@ $uw_esc = fn($s) => htmlspecialchars((string) ($s ?? ''), ENT_QUOTES, 'UTF-8');
         <button type="button" id="modalCloseBtn" class="modal-close" aria-label="Close modal">&times;</button>
       </div>
       <div id="modalContentBody" class="modal-body"></div>
-    </div>
-  </div>
-
-  <!-- Confirmation / Hold / My Reservations Popup -->
-  <div id="confirmModal" class="modal-backdrop modal-backdrop-top" role="dialog" aria-modal="true" style="display:none;">
-    <div class="modal-content modal-content-sm">
-      <div class="modal-header">
-        <h3 id="confirmModalTitle" class="modal-title">Confirm Action</h3>
-        <button type="button" id="confirmModalClose" class="modal-close" aria-label="Close popup">&times;</button>
-      </div>
-      <div id="confirmModalBody" class="modal-body"></div>
     </div>
   </div>
 

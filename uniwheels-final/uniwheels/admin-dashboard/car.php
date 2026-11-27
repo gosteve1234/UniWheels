@@ -10,11 +10,6 @@ const TRANSMISSIONS = ['Automatic', 'Manual'];
 const BODY_TYPES = ['Sedan', 'SUV', 'Hatchback', 'MPV', 'Pickup', 'Van'];
 const FUEL_TYPES = ['Gasoline', 'Diesel', 'Hybrid', 'Electric'];
 const SEATINGS = ['2 Seats', '5 Seats', '7 Seats', '8 Seats', '12 Seats'];
-const LISTING_TYPES = [
-    'SALE' => 'For Sale',
-    'RENT' => 'For Rent',
-    'BOTH' => 'For Sale & Rent',
-];
 
 $id = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
 $car = ($pdo && $id) ? find_car($pdo, $id) : null;
@@ -27,9 +22,7 @@ $is_new = !$car;
 
 $defaults = [
     'name'              => '',
-    'listing_type'      => 'SALE',
     'price'             => '',
-    'rental_rate'       => '',
     'booking_deposit'   => $uw_settings['default_deposit'] ?? '5000',
     'booking_policy'    => $uw_settings['default_policy'] ?? '',
     'brand'             => '',
@@ -53,7 +46,7 @@ if ($car) {
         $extracted = uw_extract_year($car);
         $form['model_year'] = $extracted > 0 ? (string) $extracted : '';
     }
-    if ((string) $form['booking_deposit'] === '') {
+    if ((string) $form['booking_deposit'] === '' && strtoupper((string) $form['status']) !== 'MAINTENANCE') {
         $form['booking_deposit'] = $uw_settings['default_deposit'] ?? '5000';
     }
     if (trim((string) $form['booking_policy']) === '') {
@@ -75,15 +68,11 @@ if ($pdo && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $form[$key] = trim((string) ($_POST[$key] ?? $value));
     }
     $form['price'] = preg_replace('/[^0-9.]/', '', $form['price']);
-    $form['rental_rate'] = preg_replace('/[^0-9.]/', '', $form['rental_rate']);
     $form['booking_deposit'] = preg_replace('/[^0-9.]/', '', $form['booking_deposit']);
     $form['model_year'] = preg_replace('/[^0-9]/', '', $form['model_year']);
 
     if (ctype_digit(str_replace(',', '', $form['mileage'])) && $form['mileage'] !== '') {
         $form['mileage'] = number_format((int) str_replace(',', '', $form['mileage'])) . ' km';
-    }
-    if (!isset(LISTING_TYPES[$form['listing_type']])) {
-        $form['listing_type'] = 'SALE';
     }
     if (!isset(CAR_STATUSES[$form['status']])) {
         $form['status'] = 'AVAILABLE';
@@ -101,20 +90,21 @@ if ($pdo && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Required validations (Requirement F)
+    $isMaintenanceForm = $form['status'] === 'MAINTENANCE';
     if ($form['name'] === '') {
         $errors['name'] = 'Please type the car name.';
     }
-    if (in_array($form['listing_type'], ['SALE', 'BOTH'], true) && (float) $form['price'] <= 0) {
+    if (!$isMaintenanceForm && (float) $form['price'] <= 0) {
         $errors['price'] = 'Please enter the selling price.';
     }
-    if (in_array($form['listing_type'], ['RENT', 'BOTH'], true) && (float) $form['rental_rate'] <= 0) {
-        $errors['rental_rate'] = 'Please enter the daily rental rate.';
+    if (!$isMaintenanceForm && ($form['booking_deposit'] === '' || (float) $form['booking_deposit'] < 0)) {
+        $errors['booking_deposit'] = 'Please enter the reservation deposit (0 or higher).';
     }
-    if ($form['booking_deposit'] === '' || (float) $form['booking_deposit'] < 0) {
-        $errors['booking_deposit'] = 'Please enter the booking deposit (0 or higher).';
+    if ($isMaintenanceForm && $form['booking_deposit'] !== '' && (float) $form['booking_deposit'] < 0) {
+        $errors['booking_deposit'] = 'Reservation deposit cannot be negative.';
     }
     if ($form['booking_policy'] === '') {
-        $errors['booking_policy'] = 'Please enter the booking & rental policy.';
+        $errors['booking_policy'] = 'Please enter the reservation & viewing policy.';
     }
     if ($form['brand'] === '') {
         $errors['brand'] = 'Please enter the brand.';
@@ -183,8 +173,8 @@ if ($pdo && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $photo_labels_json = !empty($labelMap) ? json_encode($labelMap, JSON_UNESCAPED_UNICODE) : null;
 
         $priceVal = (float) ($form['price'] ?: 0);
-        $rentalVal = $form['rental_rate'] !== '' ? (float) $form['rental_rate'] : null;
-        $depositVal = (float) $form['booking_deposit'];
+        $rentalVal = null;
+        $depositVal = $form['booking_deposit'] !== '' ? (float) $form['booking_deposit'] : null;
         $now_sold = in_array($form['status'], SOLD_STATUSES, true);
 
         if ($is_new) {
@@ -202,7 +192,7 @@ if ($pdo && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     '', '', '', '', ''
                 )");
             $stmt->execute([
-                $form['name'], $form['brand'], (int) $form['model_year'], $form['listing_type'],
+                $form['name'], $form['brand'], (int) $form['model_year'], 'SALE',
                 $priceVal, $rentalVal, $depositVal, $form['booking_policy'],
                 $form['stock_id'], $form['mileage'], $form['transmission'], $form['body_type'],
                 $form['fuel_type'], $form['seating'], $form['finish'],
@@ -235,7 +225,7 @@ if ($pdo && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     image_file = ?, gallery_images = ?, photo_labels = ?
                 WHERE id = ?");
             $stmt->execute([
-                $form['name'], $form['brand'], (int) $form['model_year'], $form['listing_type'],
+                $form['name'], $form['brand'], (int) $form['model_year'], 'SALE',
                 $priceVal, $old_price, $rentalVal, $depositVal, $form['booking_policy'],
                 $form['stock_id'], $form['mileage'], $form['transmission'], $form['body_type'],
                 $form['fuel_type'], $form['seating'], $form['finish'],
@@ -251,9 +241,11 @@ if ($pdo && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $redirectShow = '';
         if ($now_sold) {
             $redirectShow = '?show=sold';
+        } elseif ($form['status'] === 'TRADED') {
+            $redirectShow = '?show=trade';
         } elseif ($form['status'] === 'RESERVED') {
             $redirectShow = '?show=reserved';
-        } elseif (in_array($form['status'], ['RENTED', 'MAINTENANCE'], true)) {
+        } elseif ($form['status'] === 'MAINTENANCE') {
             $redirectShow = '?show=other';
         }
         header('Location: index.php' . $redirectShow);
@@ -332,23 +324,25 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
     <h2>About the car</h2>
 
     <div class="field">
-      <label for="name">Car name <span class="required">required</span></label>
+      <label for="name">Car name <span class="required" aria-hidden="true">*</span></label>
       <input type="text" id="name" name="name" value="<?= h($form['name']) ?>" placeholder="e.g. 2021 Toyota Vios 1.3 XLE" required <?= isset($errors['name']) ? 'aria-invalid="true" aria-describedby="name-error"' : '' ?>>
       <?php field_error($errors, 'name'); ?>
     </div>
 
+    <?php $isMaint = strtoupper((string) $form['status']) === 'MAINTENANCE'; ?>
     <div class="field-row-2">
-      <div class="field">
-        <label for="listing_type">Listing type <span class="required">required</span></label>
-        <select id="listing_type" name="listing_type" required>
-          <?php foreach (LISTING_TYPES as $val => $label): ?>
-            <option value="<?= h($val) ?>" <?= strtoupper($form['listing_type']) === $val ? 'selected' : '' ?>><?= h($label) ?></option>
-          <?php endforeach; ?>
-        </select>
+      <div class="field" id="sale-price-field">
+        <label for="price">Selling price in pesos <span class="required" id="price-req-star" aria-hidden="true" <?= $isMaint ? 'hidden' : '' ?>>*</span></label>
+        <input type="text" id="price" name="price" inputmode="numeric" value="<?= h($form['price'] !== '' && (float) $form['price'] > 0 ? number_format((float) $form['price']) : '') ?>" placeholder="e.g. 545,000" <?= $isMaint ? '' : 'required' ?> <?= isset($errors['price']) ? 'aria-invalid="true" aria-describedby="price-error"' : '' ?>>
+        <?php field_error($errors, 'price'); ?>
+        <?php if ($car && $car['old_price'] !== null): ?>
+          <p class="hint">Showing reduced from <strong><?= h(peso($car['old_price'])) ?></strong>.</p>
+          <label class="choice"><input type="checkbox" name="hide_old_price" value="1"> Stop showing old price</label>
+        <?php endif; ?>
       </div>
 
       <div class="field">
-        <label for="status">Availability status <span class="required">required</span></label>
+        <label for="status">Availability status <span class="required" aria-hidden="true">*</span></label>
         <select id="status" name="status" required>
           <?php foreach (CAR_STATUSES as $value => $label): ?>
             <option value="<?= h($value) ?>" <?= strtoupper($form['status']) === $value ? 'selected' : '' ?>><?= h($label) ?></option>
@@ -357,27 +351,9 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
       </div>
     </div>
 
-    <div class="field-row-2">
-      <div class="field" id="sale-price-field">
-        <label for="price">Selling price in pesos <span class="required" id="price-req-tag">required</span></label>
-        <input type="text" id="price" name="price" inputmode="numeric" value="<?= h($form['price'] !== '' && (float) $form['price'] > 0 ? number_format((float) $form['price']) : '') ?>" placeholder="e.g. 545,000" <?= isset($errors['price']) ? 'aria-invalid="true" aria-describedby="price-error"' : '' ?>>
-        <?php field_error($errors, 'price'); ?>
-        <?php if ($car && $car['old_price'] !== null): ?>
-          <p class="hint">Showing reduced from <strong><?= h(peso($car['old_price'])) ?></strong>.</p>
-          <label class="choice"><input type="checkbox" name="hide_old_price" value="1"> Stop showing old price</label>
-        <?php endif; ?>
-      </div>
-
-      <div class="field" id="rental-rate-field">
-        <label for="rental_rate">Daily rental rate (PHP / day) <span class="required" id="rate-req-tag">required for rent</span></label>
-        <input type="text" id="rental_rate" name="rental_rate" inputmode="numeric" value="<?= h($form['rental_rate'] !== '' && (float) $form['rental_rate'] > 0 ? number_format((float) $form['rental_rate']) : '') ?>" placeholder="e.g. 2,200" <?= isset($errors['rental_rate']) ? 'aria-invalid="true" aria-describedby="rental_rate-error"' : '' ?>>
-        <?php field_error($errors, 'rental_rate'); ?>
-      </div>
-    </div>
-
     <div class="field">
-      <label for="booking_deposit">Reservation / Booking deposit (PHP) <span class="required">required</span></label>
-      <input type="text" id="booking_deposit" name="booking_deposit" inputmode="numeric" value="<?= h($form['booking_deposit'] !== '' ? number_format((float) $form['booking_deposit']) : '') ?>" placeholder="e.g. 5,000" required <?= isset($errors['booking_deposit']) ? 'aria-invalid="true"' : '' ?>>
+      <label for="booking_deposit">Reservation deposit (PHP) <span class="required" id="deposit-req-star" aria-hidden="true" <?= $isMaint ? 'hidden' : '' ?>>*</span></label>
+      <input type="text" id="booking_deposit" name="booking_deposit" inputmode="numeric" value="<?= h($form['booking_deposit'] !== '' && ((float) $form['booking_deposit'] > 0 || !$isMaint) ? number_format((float) $form['booking_deposit']) : '') ?>" placeholder="e.g. 5,000" <?= $isMaint ? '' : 'required' ?> <?= isset($errors['booking_deposit']) ? 'aria-invalid="true"' : '' ?>>
       <?php field_error($errors, 'booking_deposit'); ?>
     </div>
   </section>
@@ -388,14 +364,14 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
 
     <div class="field-row-2">
       <div class="field">
-        <label for="brand">Brand <span class="required">required</span></label>
+        <label for="brand">Brand <span class="required" aria-hidden="true">*</span></label>
         <input type="text" id="brand" name="brand" list="brand-list" value="<?= h($form['brand']) ?>" placeholder="e.g. Toyota" required <?= isset($errors['brand']) ? 'aria-invalid="true"' : '' ?>>
         <datalist id="brand-list"><?php foreach ($brands as $b): ?><option value="<?= h($b) ?>"><?php endforeach; ?></datalist>
         <?php field_error($errors, 'brand'); ?>
       </div>
 
       <div class="field">
-        <label for="model_year">Year model <span class="required">required</span></label>
+        <label for="model_year">Year model <span class="required" aria-hidden="true">*</span></label>
         <input type="number" id="model_year" name="model_year" min="1950" max="<?= (int) date('Y') + 1 ?>" value="<?= h($form['model_year']) ?>" placeholder="e.g. 2021" required <?= isset($errors['model_year']) ? 'aria-invalid="true"' : '' ?>>
         <?php field_error($errors, 'model_year'); ?>
       </div>
@@ -403,13 +379,13 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
 
     <div class="field-row-2">
       <div class="field">
-        <label for="mileage">Mileage <span class="required">required</span></label>
+        <label for="mileage">Mileage <span class="required" aria-hidden="true">*</span></label>
         <input type="text" id="mileage" name="mileage" value="<?= h($form['mileage']) ?>" placeholder="e.g. 28,400 km" required <?= isset($errors['mileage']) ? 'aria-invalid="true"' : '' ?>>
         <?php field_error($errors, 'mileage'); ?>
       </div>
 
       <div class="field">
-        <label for="stock_id">Stock number <span class="required">required</span></label>
+        <label for="stock_id">Stock number <span class="required" aria-hidden="true">*</span></label>
         <input type="text" id="stock_id" name="stock_id" value="<?= h($form['stock_id']) ?>" placeholder="e.g. UW-TOY01" required <?= isset($errors['stock_id']) ? 'aria-invalid="true"' : '' ?>>
         <?php field_error($errors, 'stock_id'); ?>
       </div>
@@ -417,13 +393,13 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
 
     <div class="field-row-2">
       <div class="field">
-        <label for="transmission">Transmission <span class="required">required</span></label>
+        <label for="transmission">Transmission <span class="required" aria-hidden="true">*</span></label>
         <select id="transmission" name="transmission" required><?php select_options(TRANSMISSIONS, $form['transmission']); ?></select>
         <?php field_error($errors, 'transmission'); ?>
       </div>
 
       <div class="field">
-        <label for="body_type">Body type <span class="required">required</span></label>
+        <label for="body_type">Body type <span class="required" aria-hidden="true">*</span></label>
         <select id="body_type" name="body_type" required><?php select_options(BODY_TYPES, $form['body_type']); ?></select>
         <?php field_error($errors, 'body_type'); ?>
       </div>
@@ -431,20 +407,20 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
 
     <div class="field-row-2">
       <div class="field">
-        <label for="fuel_type">Fuel <span class="required">required</span></label>
+        <label for="fuel_type">Fuel <span class="required" aria-hidden="true">*</span></label>
         <select id="fuel_type" name="fuel_type" required><?php select_options(FUEL_TYPES, $form['fuel_type']); ?></select>
         <?php field_error($errors, 'fuel_type'); ?>
       </div>
 
       <div class="field">
-        <label for="seating">Seats <span class="required">required</span></label>
+        <label for="seating">Seats <span class="required" aria-hidden="true">*</span></label>
         <select id="seating" name="seating" required><?php select_options(SEATINGS, $form['seating']); ?></select>
         <?php field_error($errors, 'seating'); ?>
       </div>
     </div>
 
     <div class="field">
-      <label for="finish">Colour <span class="required">required</span></label>
+      <label for="finish">Colour <span class="required" aria-hidden="true">*</span></label>
       <input type="text" id="finish" name="finish" value="<?= h($form['finish']) ?>" placeholder="e.g. Pearl White" required <?= isset($errors['finish']) ? 'aria-invalid="true"' : '' ?>>
       <?php field_error($errors, 'finish'); ?>
     </div>
@@ -455,13 +431,13 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
     <h2>Vehicle Condition, History &amp; Policy</h2>
 
     <div class="field">
-      <label for="ownership_history">Ownership history <span class="required">required</span></label>
+      <label for="ownership_history">Ownership history <span class="required" aria-hidden="true">*</span></label>
       <input type="text" id="ownership_history" name="ownership_history" value="<?= h($form['ownership_history']) ?>" placeholder="e.g. 1 previous owner or Company-owned since 2021" required <?= isset($errors['ownership_history']) ? 'aria-invalid="true"' : '' ?>>
       <?php field_error($errors, 'ownership_history'); ?>
     </div>
 
     <div class="field">
-      <label for="damage_status">Condition / Damage status <span class="required">required</span></label>
+      <label for="damage_status">Condition / Damage status <span class="required" aria-hidden="true">*</span></label>
       <select id="damage_status" name="damage_status" required>
         <?php foreach (UW_DAMAGE_LABELS as $code => $label): ?>
           <option value="<?= h($code) ?>" <?= strtoupper($form['damage_status']) === $code ? 'selected' : '' ?>><?= h($label) ?></option>
@@ -470,13 +446,13 @@ page_start($is_new ? 'Add a car' : 'Edit ' . $form['name'], 'cars');
     </div>
 
     <div class="field">
-      <label for="damage_report">Damage disclosure &amp; condition report <span class="required">required</span></label>
+      <label for="damage_report">Damage disclosure &amp; condition report <span class="required" aria-hidden="true">*</span></label>
       <textarea id="damage_report" name="damage_report" rows="3" placeholder="e.g. Minor scratch on rear bumper — photographed and documented before booking" required <?= isset($errors['damage_report']) ? 'aria-invalid="true"' : '' ?>><?= h($form['damage_report']) ?></textarea>
       <?php field_error($errors, 'damage_report'); ?>
     </div>
 
     <div class="field">
-      <label for="booking_policy">Booking &amp; rental policy <span class="required">required</span></label>
+      <label for="booking_policy">Reservation &amp; viewing policy <span class="required" aria-hidden="true">*</span></label>
       <textarea id="booking_policy" name="booking_policy" rows="3" required <?= isset($errors['booking_policy']) ? 'aria-invalid="true"' : '' ?>><?= h($form['booking_policy']) ?></textarea>
       <?php field_error($errors, 'booking_policy'); ?>
     </div>

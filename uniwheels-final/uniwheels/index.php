@@ -33,9 +33,12 @@ function car_images(array $car) {
     return $imgs ?: ['car-1.jpg'];
 }
 
-function car_price_label($price) {
+function car_price_label($price, $status = 'AVAILABLE') {
     $price = (float) $price;
-    return $price > 0 ? '₱' . number_format($price) : 'Ask for price';
+    if ($price > 0) {
+        return '₱' . number_format($price);
+    }
+    return strtoupper((string) $status) === 'MAINTENANCE' ? 'N/A' : 'Ask for price';
 }
 
 $cars = [];
@@ -50,7 +53,9 @@ if ($pdo) {
 }
 
 $active_cars = [];
-$sold_cars = [];
+$sold_recent_cars = [];
+$now_ts = time();
+
 foreach ($cars as $car) {
     $meta = uw_status_meta($car['status'] ?? 'AVAILABLE');
     $car['status'] = $meta['key'];
@@ -61,11 +66,15 @@ foreach ($cars as $car) {
     $car['age_label'] = uw_car_age_label($car);
     $car['model_year_resolved'] = uw_extract_year($car);
     $car['damage_status_label'] = uw_damage_label($car['damage_status'] ?? 'NONE');
-    $car['listing_type'] = strtoupper(trim($car['listing_type'] ?? 'SALE')) ?: 'SALE';
-    $car['rental_rate'] = (float) ($car['rental_rate'] ?? 0);
-    $car['effective_deposit'] = (float) ($car['booking_deposit'] ?? 0) > 0
-        ? (float) $car['booking_deposit']
-        : (float) ($settings['default_deposit'] ?? 5000);
+    $isMaintenance = $car['status'] === 'MAINTENANCE';
+    $hasDeposit = isset($car['booking_deposit']) && $car['booking_deposit'] !== '' && $car['booking_deposit'] !== null;
+    if ($isMaintenance && !$hasDeposit) {
+        $car['effective_deposit'] = null;
+    } else {
+        $car['effective_deposit'] = (float) ($car['booking_deposit'] ?? 0) > 0
+            ? (float) $car['booking_deposit']
+            : ($isMaintenance ? null : (float) ($settings['default_deposit'] ?? 5000));
+    }
     $car['effective_policy'] = trim((string) ($car['booking_policy'] ?? '')) !== ''
         ? trim((string) $car['booking_policy'])
         : $settings['default_policy'];
@@ -73,16 +82,50 @@ foreach ($cars as $car) {
     $car['reserve_expires_label'] = !empty($car['reserve_expires_at']) ? date('F j, Y, g:i A', strtotime($car['reserve_expires_at'])) : null;
 
     $car['is_sold'] = $car['status'] === 'SOLD';
+    $car['is_traded'] = $car['status'] === 'TRADED';
     $car['is_available'] = $car['status'] === 'AVAILABLE';
-    $car['is_reduced'] = !$car['is_sold'] && (float) ($car['old_price'] ?? 0) > (float) ($car['price'] ?? 0);
+    $car['is_reduced'] = !$car['is_sold'] && !$car['is_traded'] && (float) ($car['old_price'] ?? 0) > (float) ($car['price'] ?? 0) && (float) ($car['price'] ?? 0) > 0;
 
+    if ($car['is_traded']) {
+        continue;
+    }
     if ($car['is_sold']) {
-        $sold_cars[] = $car;
+        $sold_ts = !empty($car['sold_at']) ? strtotime($car['sold_at']) : false;
+        if ($sold_ts !== false) {
+            $days_ago = max(0, (int) floor(($now_ts - $sold_ts) / 86400));
+            if ($days_ago <= 30) {
+                $car['sold_days_ago'] = $days_ago;
+                $car['sold_ago_label'] = $days_ago === 0
+                    ? 'Sold today'
+                    : ($days_ago === 1 ? 'Sold 1 day ago' : "Sold {$days_ago} days ago");
+                $car['_sold_ts'] = $sold_ts;
+                $sold_recent_cars[] = $car;
+            }
+        }
     } else {
         $active_cars[] = $car;
     }
 }
-$showroom_cars = array_merge($active_cars, array_slice($sold_cars, 0, SOLD_CARS_SHOWN));
+
+// Keep Available units at the top, followed by Reserved, then Under Maintenance.
+usort($active_cars, function ($a, $b) {
+    $rank = fn($s) => match ($s) {
+        'AVAILABLE'   => 0,
+        'RESERVED'    => 1,
+        'MAINTENANCE' => 2,
+        default       => 3,
+    };
+    $ra = $rank($a['status']);
+    $rb = $rank($b['status']);
+    if ($ra !== $rb) {
+        return $ra <=> $rb;
+    }
+    return ((int) $b['id']) <=> ((int) $a['id']);
+});
+
+usort($sold_recent_cars, fn($a, $b) => ($b['_sold_ts'] <=> $a['_sold_ts']) ?: (((int) $b['id']) <=> ((int) $a['id'])));
+
+$showroom_cars = array_merge($active_cars, $sold_recent_cars);
 
 function distinct_values(array $cars, $field) {
     $values = [];
@@ -152,7 +195,7 @@ include __DIR__ . '/header.php';
         <ul class="hero-trust-list">
           <li>Original LTO papers</li>
           <li>Verified vehicle history</li>
-          <li>Instant reservation holds</li>
+          <li>Hassle-free showroom visits</li>
         </ul>
       </div>
 
@@ -169,7 +212,7 @@ include __DIR__ . '/header.php';
         <div>
           <span class="section-tag-pill">Showroom Floor</span>
           <h2 class="section-title-large">On the Floor Now</h2>
-          <p class="section-desc-text">Inspect condition reports, zoom photos, reserve, or book directly.</p>
+          <p class="section-desc-text">Inspect condition reports, zoom photos, and inquire directly on Messenger.</p>
         </div>
       </div>
 
@@ -218,9 +261,9 @@ include __DIR__ . '/header.php';
         </div>
       <?php endif; ?>
 
-      <?php if (!empty($showroom_cars)): ?>
-        <div class="inventory-cards-grid">
-          <?php foreach ($showroom_cars as $i => $car):
+      <?php if (!empty($active_cars)): ?>
+        <div class="inventory-cards-grid" id="activeInventoryGrid">
+          <?php foreach ($active_cars as $i => $car):
             $ageShort = '';
             if ($car['model_year_resolved'] > 0) {
                 $yrs = max(0, (int) date('Y') - $car['model_year_resolved']);
@@ -229,10 +272,10 @@ include __DIR__ . '/header.php';
             $specs = array_filter([$ageShort, $car['mileage'] ?? '', $car['transmission'] ?? '', $car['fuel_type'] ?? '']);
             $photo_count = count($car['all_images']);
           ?>
-            <article class="car-card<?php echo $car['is_sold'] ? ' is-sold' : ''; ?>"
+            <article class="car-card"
                      data-car-id="<?php echo (int) $car['id']; ?>"
                      data-car-index="<?php echo $i; ?>"
-                     data-sold="<?php echo $car['is_sold'] ? '1' : '0'; ?>"
+                     data-sold="0"
                      data-status="<?php echo esc($car['status']); ?>"
                      data-search="<?php echo esc(strtolower(($car['brand'] ?? '') . ' ' . $car['name'])); ?>"
                      data-brand="<?php echo esc(strtolower(trim($car['brand'] ?? ''))); ?>"
@@ -253,38 +296,77 @@ include __DIR__ . '/header.php';
               <div class="car-card-body">
                 <h3 class="car-card-title"><?php echo esc($car['name']); ?></h3>
                 <div class="car-card-price">
-                  <?php if ($car['is_sold']): ?>
-                    Sold
-                  <?php elseif ($car['listing_type'] === 'RENT' && $car['rental_rate'] > 0): ?>
-                    <?php echo esc(car_price_label($car['rental_rate'])); ?> <span class="price-unit">/ day</span>
-                  <?php else: ?>
-                    <?php echo esc(car_price_label($car['price'] ?? 0)); ?>
-                    <?php if ($car['is_reduced']): ?>
-                      <s class="car-card-old-price"><?php echo esc(car_price_label($car['old_price'])); ?></s>
-                    <?php endif; ?>
+                  <?php echo esc(car_price_label($car['price'] ?? 0, $car['status'])); ?>
+                  <?php if ($car['is_reduced']): ?>
+                    <s class="car-card-old-price"><?php echo esc(car_price_label($car['old_price'])); ?></s>
                   <?php endif; ?>
                 </div>
-                <?php if (!$car['is_sold'] && $car['listing_type'] === 'BOTH' && $car['rental_rate'] > 0): ?>
-                  <div class="car-card-rental-sub">Rent from <?php echo esc(car_price_label($car['rental_rate'])); ?> / day</div>
-                <?php endif; ?>
                 <?php if ($specs): ?>
                   <p class="car-card-specs"><?php echo esc(implode(' · ', $specs)); ?></p>
                 <?php endif; ?>
-                <div class="car-card-hold-note js-card-hold-note" hidden></div>
 
                 <div class="car-card-actions js-card-actions">
-                  <?php if (!$car['is_sold']): ?>
-                    <?php if ($car['is_available']): ?>
-                      <button type="button" class="btn-card-book js-car-book">Book / Reserve</button>
-                    <?php else: ?>
-                      <button type="button" class="btn-card-book btn-card-disabled" disabled><?php echo esc($car['status_label']); ?></button>
-                    <?php endif; ?>
+                  <?php if ($car['is_available']): ?>
+                    <button type="button" class="btn-card-book js-car-inquire">Inquire on Messenger</button>
+                  <?php else: ?>
+                    <button type="button" class="btn-card-book btn-card-disabled" disabled><?php echo esc($car['status_label']); ?></button>
                   <?php endif; ?>
                   <button type="button" class="btn-card-link js-car-details">Photos &amp; details</button>
                 </div>
               </div>
             </article>
           <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($sold_recent_cars)): ?>
+        <div class="sold-showcase-block" id="soldThisMonthSection">
+          <div class="sold-showcase-header">
+            <div>
+              <span class="section-tag-pill sold-pill-tag">Recent Sales</span>
+              <h3 class="sold-showcase-title">Sold This Month</h3>
+              <p class="sold-showcase-sub">Verified units sold within the last 30 days.</p>
+            </div>
+          </div>
+          <div class="inventory-cards-grid">
+            <?php
+              $active_offset = count($active_cars);
+              foreach ($sold_recent_cars as $j => $car):
+                $ageShort = '';
+                if ($car['model_year_resolved'] > 0) {
+                    $yrs = max(0, (int) date('Y') - $car['model_year_resolved']);
+                    $ageShort = $yrs === 0 ? 'Current yr' : "{$yrs} " . ($yrs === 1 ? 'yr' : 'yrs') . ' old';
+                }
+                $specs = array_filter([$ageShort, $car['mileage'] ?? '', $car['transmission'] ?? '', $car['fuel_type'] ?? '']);
+                $photo_count = count($car['all_images']);
+            ?>
+              <article class="car-card is-sold"
+                       data-car-id="<?php echo (int) $car['id']; ?>"
+                       data-car-index="<?php echo $active_offset + $j; ?>"
+                       data-sold="1"
+                       data-status="SOLD">
+                <button type="button" class="car-card-img-wrap js-car-details" aria-label="Photos and details: <?php echo esc($car['name']); ?>">
+                  <img src="assets/images/cars/<?php echo esc($car['all_images'][0]); ?>" alt="<?php echo esc($car['name']); ?>" class="car-card-photo" loading="lazy" onerror="this.onerror=null;this.src='assets/images/cars/car-1.jpg'">
+                  <span class="card-status-badge <?php echo esc($car['status_class']); ?>"><?php echo esc($car['sold_ago_label']); ?></span>
+                  <?php if ($photo_count > 1): ?>
+                    <span class="card-photo-count"><?php echo $photo_count; ?> photos</span>
+                  <?php endif; ?>
+                </button>
+
+                <div class="car-card-body">
+                  <h3 class="car-card-title"><?php echo esc($car['name']); ?></h3>
+                  <div class="car-card-price">Sold</div>
+                  <?php if ($specs): ?>
+                    <p class="car-card-specs"><?php echo esc(implode(' · ', $specs)); ?></p>
+                  <?php endif; ?>
+
+                  <div class="car-card-actions">
+                    <button type="button" class="btn-card-link js-car-details">Photos &amp; details</button>
+                  </div>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
         </div>
       <?php endif; ?>
 

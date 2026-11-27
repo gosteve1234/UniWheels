@@ -37,10 +37,10 @@ function uw_default_settings(): array {
         'showroom_phone'   => '(02) 8123-4567 / 0917-123-4567',
         'showroom_email'   => 'sales@uniwheelsmotors.com',
         'hero_title'       => 'Quality secondhand cars you can trust',
-        'hero_subtitle'    => 'Inspected, complete with original LTO papers, and transparently documented before you book.',
+        'hero_subtitle'    => 'Inspected, complete with original LTO papers, and transparently documented before you visit.',
         'default_deposit'  => '5000',
         'max_hold_days'    => '7',
-        'default_policy'   => "Valid government ID and driver's license required upon viewing/pickup. Reservation holds automatically release if payment is not completed before the deadline. All deposits are applied toward final payment or refunded per inspection terms.",
+        'default_policy'   => "Valid government ID and driver's license required upon viewing/pickup. Reservations expire if the buyer does not complete the purchase within the agreed hold period.",
     ];
 }
 
@@ -94,6 +94,18 @@ function uw_ensure_schema(?PDO $pdo): void {
         }
         if (!isset($colSet['reserve_expires_at'])) {
             $alterParts[] = "ADD COLUMN reserve_expires_at DATETIME NULL AFTER reserved_at";
+        }
+        if (!isset($colSet['listed_price'])) {
+            $alterParts[] = "ADD COLUMN listed_price DECIMAL(12,2) NULL AFTER price";
+        }
+        if (!isset($colSet['traded_at'])) {
+            $alterParts[] = "ADD COLUMN traded_at DATETIME NULL AFTER sold_at";
+        }
+        if (!isset($colSet['trade_car_name'])) {
+            $alterParts[] = "ADD COLUMN trade_car_name VARCHAR(255) NULL AFTER traded_at";
+        }
+        if (!isset($colSet['trade_stock_id'])) {
+            $alterParts[] = "ADD COLUMN trade_stock_id VARCHAR(64) NULL AFTER trade_car_name";
         }
         if ($alterParts) {
             $pdo->exec("ALTER TABLE cars " . implode(', ', $alterParts));
@@ -176,7 +188,8 @@ function uw_get_settings(?PDO $pdo): array {
 }
 
 /**
- * Releases expired customer holds/pending bookings automatically so vehicles become available again.
+ * Marks expired holds in uw_reservation_holds without auto-releasing RESERVED vehicles,
+ * so staff are notified and can manually toggle "Release reserve" when a buyer does not visit.
  */
 function uw_release_expired_holds(?PDO $pdo): void {
     if (!$pdo) {
@@ -185,26 +198,8 @@ function uw_release_expired_holds(?PDO $pdo): void {
     uw_ensure_schema($pdo);
     try {
         $pdo->exec("UPDATE uw_reservation_holds SET state = 'expired' WHERE state = 'active' AND expires_at <= NOW()");
-        $pdo->exec("UPDATE vehicle_bookings SET state = 'expired' WHERE state = 'pending' AND expires_at <= NOW()");
-
-        // Release cars whose timed hold expired and that do not have a confirmed booking.
-        $pdo->exec("
-            UPDATE cars c
-            LEFT JOIN vehicle_bookings vb
-              ON vb.car_id = c.id AND vb.state = 'confirmed'
-            LEFT JOIN uw_reservation_holds rh
-              ON rh.car_id = c.id AND rh.state IN ('active', 'confirmed') AND (rh.state = 'confirmed' OR rh.expires_at > NOW())
-            SET c.status = 'AVAILABLE',
-                c.reserved_at = NULL,
-                c.reserve_expires_at = NULL
-            WHERE UPPER(c.status) = 'RESERVED'
-              AND c.reserve_expires_at IS NOT NULL
-              AND c.reserve_expires_at <= NOW()
-              AND vb.id IS NULL
-              AND rh.id IS NULL
-        ");
     } catch (Throwable $e) {
-        // Do not fail page rendering if cleanup fails.
+        // Do not fail page rendering if check fails.
     }
 }
 
@@ -236,8 +231,8 @@ function uw_status_meta(string $status): array {
     $map = [
         'AVAILABLE'    => ['key' => 'AVAILABLE', 'label' => 'Available', 'class' => 'badge-available'],
         'RESERVED'     => ['key' => 'RESERVED', 'label' => 'Reserved', 'class' => 'badge-reserved'],
-        'RENTED'       => ['key' => 'RENTED', 'label' => 'Rented', 'class' => 'badge-rented'],
         'MAINTENANCE'  => ['key' => 'MAINTENANCE', 'label' => 'Under Maintenance', 'class' => 'badge-maintenance'],
+        'TRADED'       => ['key' => 'TRADED', 'label' => 'Traded', 'class' => 'badge-sold'],
         'SOLD'         => ['key' => 'SOLD', 'label' => 'Sold', 'class' => 'badge-sold'],
         'OUT OF STOCK' => ['key' => 'SOLD', 'label' => 'Sold', 'class' => 'badge-sold'],
     ];

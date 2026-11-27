@@ -106,7 +106,7 @@ function uw_wp_publish($car) {
         'meta_key' => '_uniwheels_car_id', 'meta_value' => (int) $car['id']]);
     $post_id = $existing ? (int) $existing[0] : 0;
 
-    if (!empty($car['deleted_at'])) {
+    if (!empty($car['deleted_at']) || strtoupper((string) ($car['status'] ?? '')) === 'TRADED') {
         if ($post_id) {
             wp_trash_post($post_id);
         }

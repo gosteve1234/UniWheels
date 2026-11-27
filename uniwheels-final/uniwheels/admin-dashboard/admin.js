@@ -138,25 +138,29 @@
     });
   });
 
-  var listingSelect = document.getElementById('listing_type');
-  var priceReqTag = document.getElementById('price-req-tag');
-  var rateReqTag = document.getElementById('rate-req-tag');
+  var statusSelect = document.getElementById('status');
+  var priceInput = document.getElementById('price');
+  var depositInput = document.getElementById('booking_deposit');
+  var priceReqStar = document.getElementById('price-req-star');
+  var depositReqStar = document.getElementById('deposit-req-star');
 
-  function syncListingReqUI() {
-    if (!listingSelect) return;
-    var mode = listingSelect.value;
-    if (priceReqTag) priceReqTag.textContent = (mode === 'RENT') ? 'optional for rent-only' : 'required';
-    if (rateReqTag) rateReqTag.textContent = (mode === 'SALE') ? 'optional' : 'required';
+  function syncMaintenanceFields() {
+    if (!statusSelect) return;
+    var isMaint = statusSelect.value === 'MAINTENANCE';
+    if (priceReqStar) priceReqStar.hidden = isMaint;
+    if (depositReqStar) depositReqStar.hidden = isMaint;
+    if (priceInput) priceInput.required = !isMaint;
+    if (depositInput) depositInput.required = !isMaint;
   }
-  if (listingSelect) {
-    listingSelect.addEventListener('change', syncListingReqUI);
-    syncListingReqUI();
+  if (statusSelect) {
+    statusSelect.addEventListener('change', syncMaintenanceFields);
+    syncMaintenanceFields();
   }
 
   form.addEventListener('submit', function (e) {
     form.querySelectorAll('.field-error.js').forEach(function (el) { el.remove(); });
     var problems = [];
-    var mode = listingSelect ? listingSelect.value : 'SALE';
+    var isMaint = statusSelect && statusSelect.value === 'MAINTENANCE';
 
     function checkText(id, msg) {
       var el = document.getElementById(id);
@@ -177,13 +181,13 @@
     }
 
     checkText('name', 'Please type the car name.');
-    if (mode === 'SALE' || mode === 'BOTH') {
+    if (!isMaint) {
       checkPositive('price', 'Please enter the selling price.', false);
+      checkPositive('booking_deposit', 'Please enter the reservation deposit.', true);
+    } else {
+      if (priceInput) priceInput.setAttribute('aria-invalid', 'false');
+      if (depositInput) depositInput.setAttribute('aria-invalid', 'false');
     }
-    if (mode === 'RENT' || mode === 'BOTH') {
-      checkPositive('rental_rate', 'Please enter the daily rental rate.', false);
-    }
-    checkPositive('booking_deposit', 'Please enter the booking deposit.', true);
 
     checkText('brand', 'Please enter the brand.');
     var yearEl = document.getElementById('model_year');
@@ -199,7 +203,7 @@
     checkText('finish', 'Please enter the colour.');
     checkText('ownership_history', 'Please enter the ownership history.');
     checkText('damage_report', 'Please enter the condition / damage disclosure report.');
-    checkText('booking_policy', 'Please enter the booking & rental policy.');
+    checkText('booking_policy', 'Please enter the reservation & viewing policy.');
 
     var keptPhotos = Array.prototype.filter.call(
       form.querySelectorAll('input[name="remove_photo[]"]'),
@@ -273,4 +277,293 @@
       removeForm.submit();
     });
   }
+})();
+
+/* Staff Reserve Modal on inventory dashboard (duration, buyer name, mobile/email). */
+(function () {
+  var modal = document.getElementById('staff-reserve-modal');
+  var form = document.getElementById('staff-reserve-form');
+  if (!modal || !form) return;
+
+  var carIdInput = document.getElementById('staff-reserve-car-id');
+  var carNameEl = document.getElementById('staff-reserve-car-name');
+  var depositEl = document.getElementById('staff-reserve-deposit');
+  var daysInput = document.getElementById('staff-reserve-days-value');
+  var customWrap = document.getElementById('staff-custom-days-wrap');
+  var customInput = document.getElementById('staff-custom-days');
+  var nameInput = document.getElementById('staff-reserve-name');
+  var contactInput = document.getElementById('staff-reserve-contact');
+  var errorEl = document.getElementById('staff-reserve-error');
+  var submitBtn = document.getElementById('staff-reserve-submit');
+  var pills = modal.querySelectorAll('#staff-reserve-pills .hold-pill');
+  var lastTrigger = null;
+  var selectedMode = '1';
+
+  function setActivePill(val) {
+    selectedMode = String(val);
+    pills.forEach(function (pill) {
+      pill.classList.toggle('active', pill.dataset.days === selectedMode);
+    });
+    if (selectedMode === 'custom') {
+      customWrap.hidden = false;
+      daysInput.value = customInput.value || '4';
+    } else {
+      customWrap.hidden = true;
+      daysInput.value = selectedMode;
+    }
+  }
+
+  function openReserveModal(trigger) {
+    lastTrigger = trigger;
+    carIdInput.value = trigger.dataset.carId || '';
+    carNameEl.textContent = trigger.dataset.carName || '';
+    depositEl.textContent = '₱' + (trigger.dataset.deposit || '5,000');
+    nameInput.value = '';
+    contactInput.value = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Reserve Car';
+    setActivePill('1');
+    modal.hidden = false;
+    nameInput.focus();
+  }
+
+  function closeReserveModal() {
+    modal.hidden = true;
+    if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.js-staff-reserve-btn');
+    if (btn) openReserveModal(btn);
+  });
+
+  pills.forEach(function (pill) {
+    pill.addEventListener('click', function () {
+      setActivePill(pill.dataset.days);
+      if (pill.dataset.days === 'custom' && customInput) customInput.focus();
+    });
+  });
+
+  if (customInput) {
+    customInput.addEventListener('input', function () {
+      if (selectedMode === 'custom') daysInput.value = customInput.value;
+    });
+  }
+
+  modal.querySelectorAll('[data-close-reserve]').forEach(function (el) {
+    el.addEventListener('click', closeReserveModal);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modal.hidden) {
+      closeReserveModal();
+    }
+  });
+
+  form.addEventListener('submit', function (e) {
+    errorEl.hidden = true;
+    var days = selectedMode === 'custom' ? parseInt(customInput.value, 10) : parseInt(selectedMode, 10);
+    var maxDays = customInput ? parseInt(customInput.max, 10) || 7 : 7;
+    if (isNaN(days) || days < 1 || days > maxDays) {
+      e.preventDefault();
+      errorEl.textContent = 'Please choose between 1 and ' + maxDays + ' days.';
+      errorEl.hidden = false;
+      return;
+    }
+    daysInput.value = String(days);
+    if (!nameInput.value.trim() || !contactInput.value.trim()) {
+      e.preventDefault();
+      errorEl.textContent = "Please enter the buyer's name and mobile number or email.";
+      errorEl.hidden = false;
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Reserving…';
+  });
+})();
+
+/* Staff Sold / Trade 3-step confirmation wizard. */
+(function () {
+  var modal = document.getElementById('staff-sold-modal');
+  var form = document.getElementById('staff-sold-form');
+  if (!modal || !form) return;
+
+  var titleEl = document.getElementById('staff-sold-title');
+  var carNameEl = document.getElementById('staff-sold-car-name');
+  var step1CarEl = document.getElementById('sold-step1-car');
+  var carIdInput = document.getElementById('staff-sold-car-id');
+  var fromTabInput = document.getElementById('staff-sold-from-tab');
+  var setPriceLabel = document.getElementById('sold-set-price-label');
+  var setChoiceSub = document.getElementById('sold-choice-set-sub');
+
+  var step1 = document.getElementById('sold-step-1');
+  var step2 = document.getElementById('sold-step-2');
+  var step3 = document.getElementById('sold-step-3');
+
+  var customPriceWrap = document.getElementById('sold-custom-price-wrap');
+  var customPriceInput = document.getElementById('staff-sold-custom-price');
+  var tradeWrap = document.getElementById('sold-trade-wrap');
+  var tradeNameInput = document.getElementById('staff-trade-car-name');
+  var tradeStockInput = document.getElementById('staff-trade-stock-id');
+  var errEl = document.getElementById('staff-sold-error');
+  var summaryBox = document.getElementById('sold-summary-box');
+  var finalSubmitBtn = document.getElementById('sold-final-submit');
+
+  var lastTrigger = null;
+  var currentCarName = '';
+  var currentSetPrice = 0;
+
+  function formatPeso(n) {
+    var num = parseFloat(n) || 0;
+    return num > 0 ? '₱' + Math.round(num).toLocaleString('en-PH') : 'No price set';
+  }
+
+  function escapeHtml(val) {
+    return String(val || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function getSelectedMode() {
+    var checked = form.querySelector('input[name="sale_mode"]:checked');
+    return checked ? checked.value : 'set_price';
+  }
+
+  function syncModeUI() {
+    var mode = getSelectedMode();
+    modal.querySelectorAll('.sold-choice-card').forEach(function (card) {
+      var radio = card.querySelector('input[type="radio"]');
+      card.classList.toggle('is-selected', !!(radio && radio.checked));
+    });
+    customPriceWrap.hidden = mode !== 'custom_price';
+    tradeWrap.hidden = mode !== 'trade';
+    errEl.hidden = true;
+  }
+
+  function showStep(num) {
+    step1.hidden = num !== 1;
+    step2.hidden = num !== 2;
+    step3.hidden = num !== 3;
+    if (num === 1) {
+      titleEl.textContent = 'Was this unit sold?';
+    } else if (num === 2) {
+      titleEl.textContent = 'Selling Price or Trade';
+    } else {
+      titleEl.textContent = 'Final Confirmation';
+    }
+  }
+
+  function openSoldModal(trigger) {
+    lastTrigger = trigger;
+    currentCarName = trigger.dataset.carName || 'this unit';
+    currentSetPrice = parseFloat(trigger.dataset.carPrice || '0') || 0;
+
+    carIdInput.value = trigger.dataset.carId || '';
+    if (trigger.dataset.fromTab) fromTabInput.value = trigger.dataset.fromTab;
+
+    carNameEl.textContent = currentCarName + (currentSetPrice > 0 ? ' · ' + formatPeso(currentSetPrice) : '');
+    step1CarEl.textContent = currentCarName;
+    setPriceLabel.textContent = formatPeso(currentSetPrice);
+    setChoiceSub.textContent = currentSetPrice > 0 ? 'Bought at ' + formatPeso(currentSetPrice) : 'Keep current selling price';
+
+    var firstRadio = form.querySelector('input[name="sale_mode"][value="set_price"]');
+    if (firstRadio) firstRadio.checked = true;
+    customPriceInput.value = '';
+    tradeNameInput.value = '';
+    tradeStockInput.value = '';
+    errEl.hidden = true;
+    finalSubmitBtn.disabled = false;
+    finalSubmitBtn.textContent = 'Confirm';
+
+    syncModeUI();
+    showStep(1);
+    modal.hidden = false;
+    var yesBtn = document.getElementById('sold-step1-yes');
+    if (yesBtn) yesBtn.focus();
+  }
+
+  function closeSoldModal() {
+    modal.hidden = true;
+    if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.js-staff-sold-btn');
+    if (btn) openSoldModal(btn);
+  });
+
+  form.querySelectorAll('input[name="sale_mode"]').forEach(function (radio) {
+    radio.addEventListener('change', syncModeUI);
+  });
+
+  document.getElementById('sold-step1-yes').addEventListener('click', function () {
+    showStep(2);
+  });
+  document.getElementById('sold-step2-back').addEventListener('click', function () {
+    showStep(1);
+  });
+  document.getElementById('sold-step3-back').addEventListener('click', function () {
+    showStep(2);
+  });
+
+  document.getElementById('sold-step2-next').addEventListener('click', function () {
+    errEl.hidden = true;
+    var mode = getSelectedMode();
+    var rows = [['Unit', escapeHtml(currentCarName)]];
+
+    if (mode === 'set_price') {
+      rows.push(['Status', 'Sold (Set selling price)']);
+      rows.push(['Selling Price', escapeHtml(formatPeso(currentSetPrice))]);
+      finalSubmitBtn.textContent = 'Confirm Sold';
+    } else if (mode === 'custom_price') {
+      var raw = customPriceInput.value.replace(/[^0-9.]/g, '');
+      var amt = parseFloat(raw);
+      if (!raw || isNaN(amt) || amt <= 0) {
+        errEl.textContent = 'Please enter the actual selling price.';
+        errEl.hidden = false;
+        customPriceInput.focus();
+        return;
+      }
+      rows.push(['Status', 'Sold (Different price)']);
+      rows.push(['Final Selling Price', escapeHtml(formatPeso(amt))]);
+      finalSubmitBtn.textContent = 'Confirm Sold';
+    } else if (mode === 'trade') {
+      var tName = tradeNameInput.value.trim();
+      var tStock = tradeStockInput.value.trim();
+      if (!tName || !tStock) {
+        errEl.textContent = 'Please enter both the traded car name and stock number.';
+        errEl.hidden = false;
+        if (!tName) tradeNameInput.focus();
+        else tradeStockInput.focus();
+        return;
+      }
+      rows.push(['Destination', 'Trade section']);
+      rows.push(['Traded With', escapeHtml(tName)]);
+      rows.push(['Stock Number', escapeHtml(tStock)]);
+      finalSubmitBtn.textContent = 'Confirm Trade';
+    }
+
+    summaryBox.innerHTML = rows.map(function (r) {
+      return '<div class="sold-summary-row"><span>' + r[0] + '</span><strong>' + r[1] + '</strong></div>';
+    }).join('');
+    showStep(3);
+    finalSubmitBtn.focus();
+  });
+
+  modal.querySelectorAll('[data-close-sold]').forEach(function (el) {
+    el.addEventListener('click', closeSoldModal);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modal.hidden) {
+      closeSoldModal();
+    }
+  });
+
+  form.addEventListener('submit', function () {
+    finalSubmitBtn.disabled = true;
+    finalSubmitBtn.textContent = 'Saving…';
+  });
 })();
